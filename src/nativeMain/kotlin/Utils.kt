@@ -38,7 +38,7 @@ inline fun UInt.add(flag: Int): UInt = this or (flag.toUInt())
 inline val UShort.hibyte: Byte get() = (this / 256.toUShort()).and(0xFF.toUInt()).toByte()
 inline val UShort.lobyte: Byte get() = this.and(0xFF.toUShort()).toByte()
 
-fun ByteArray.toHex(): String = joinToString { it.toHex() }
+fun ByteArray.toHex(): String = joinToString(separator = "") { it.toHex() }
 fun Byte.toHex(): String {
     val hex = toUByte().toInt().toString(16)
     return if (hex.length == 1) "0${hex}" else hex

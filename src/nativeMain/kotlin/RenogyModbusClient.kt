@@ -1,4 +1,5 @@
 import crc.CRC16Modbus
+import kotlin.math.exp
 
 class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
     init {
@@ -6,9 +7,9 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
     }
 
     /**
-     * Performs the ReadRegister call and returns the data returned.
+     * Performs the ReadRegister call and returns the data returned. Internal, don't use.
      */
-    private fun readRegister(startAddress: UShort, noOfReadWords: UShort): ByteArray {
+    fun readRegister(startAddress: UShort, noOfReadWords: UShort): ByteArray {
         require(noOfReadWords in 0x1.toUShort()..0x7D.toUShort()) { "$noOfReadWords: must be 0x0001..0x007D" }
 
         // prepare request
@@ -27,8 +28,9 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         }
         if (response[1] == 0x83.toByte()) {
             // error response. First verify checksum.
-            val checksum = io.readBytes(2)
-            verifyChecksum(response, checksum)
+            crc.reset()
+            crc.update(response)
+            verifyChecksum(crc.crcBytes, io.readBytes(2))
             throw RenogyException.fromCode(response[2])
         }
         if (response[1] != 0x03.toByte()) {
@@ -42,21 +44,19 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         crc.reset()
         crc.update(response)
         crc.update(data)
-        verifyChecksum(io.readBytes(2), crc.crcBytes)
+        verifyChecksum(crc.crcBytes, io.readBytes(2))
 
-        require(dataLength.toUShort() == noOfReadWords) { "$dataLength: the call was expected to return $noOfReadWords bytes" }
+        require(dataLength.toUShort() == (noOfReadWords * 2.toUShort()).toUShort()) { "$dataLength: the call was expected to return ${noOfReadWords * 2.toUShort()} bytes" }
 
         // all OK. Return the response
         return data
     }
 
-    private fun verifyChecksum(response: ByteArray, checksum: ByteArray) {
-        require(checksum.size == 2) { "${checksum.toList()}: must be of size 2" }
-        val crc = CRC16Modbus()
-        crc.update(response)
-        val crcBytes = crc.crcBytes
-        if (crcBytes[0] != checksum[0] || crcBytes[1] != checksum[1]) {
-            throw RenogyException("Checksum mismatch")
+    private fun verifyChecksum(actual: ByteArray, expected: ByteArray) {
+        require(expected.size == 2) { "${expected.toHex()}: must be of size 2" }
+        require(actual.size == 2) { "${actual.toHex()}: must be of size 2" }
+        if (actual[0] != expected[0] || actual[1] != expected[1]) {
+            throw RenogyException("Checksum mismatch: expected ${expected.toHex()} but got ${actual.toHex()}")
         }
     }
 
@@ -70,7 +70,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         val productType = result[1]
 
         result = readRegister(0x0C.toUShort(), 16.toUShort())
-        val productModel = result.map { it.toInt().toChar() } .toCharArray().concatToString().trim()
+        val productModel = result.toAsciiString().trim()
 
         // software version/hardware version
         result = readRegister(0x0014.toUShort(), 8.toUShort())
@@ -84,6 +84,8 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         return SystemInfo(maxVoltage,ratedChargingCurrent, ratedDischargingCurrent, productType, productModel, softvareVersion, hardwareVersion, serialNumber)
     }
 }
+
+fun ByteArray.toAsciiString() = map { it.toInt().toChar() } .toCharArray().concatToString()
 
 /**
  * @property maxVoltage max. voltage supported by the system: 12V/24V/36V/48V/96V; 0xFF=automatic recognition of system voltage
