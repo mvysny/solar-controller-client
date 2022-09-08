@@ -8,6 +8,14 @@ interface Closeable {
     fun close()
 }
 
+fun <T: Closeable, R> T.use(block: (T) -> R): R {
+    try {
+        return block(this)
+    } finally {
+        close()
+    }
+}
+
 interface IO {
     /**
      * Writes all [bytes] to the underlying IO. Blocks until the bytes are written.
@@ -26,15 +34,14 @@ interface IO {
     }
 }
 
-open class IOException(message: String?, cause: Throwable?) : Exception(message, cause) {
-    constructor(message: String?) : this(message, null)
+open class IOException(message: String, cause: Throwable?) : Exception(message, cause) {
+    constructor(message: String) : this(message, null)
 }
-open class EOFException(message: String?, cause: Throwable?) : IOException(message, cause) {
-    constructor(message: String?) : this(message, null)
-}
+open class EOFException(message: String) : IOException(message)
+open class FileNotFoundException(message: String) : IOException(message)
 
 open class IOFile(val fname: String) : IO, Closeable {
-    protected val fd: Int = checkNonNegative("open") { open(fname, O_RDWR) }
+    protected val fd: Int = checkNonNegative("open $fname") { open(fname, O_RDWR) }
 
     override fun write(bytes: ByteArray) {
         var current = 0

@@ -6,7 +6,11 @@ fun <R: Comparable<R>> checkNative(op: String, range: ClosedRange<R>, call: () -
     val result: R = call()
     if (result !in range) {
         val err = strerror(errno)?.toKString() ?: ""
-        throw IOException("Error $errno from $op: $err")
+        val message = "Error $errno from $op: $err"
+        if (errno == 2) {
+            throw FileNotFoundException(message)
+        }
+        throw IOException(message)
     }
     return result
 }
@@ -38,6 +42,9 @@ inline fun UInt.add(flag: Int): UInt = this or (flag.toUInt())
 inline val UShort.hibyte: Byte get() = (this / 256.toUShort()).and(0xFF.toUInt()).toByte()
 inline val UShort.lobyte: Byte get() = this.and(0xFF.toUShort()).toByte()
 
+/**
+ * Formats this byte array as a string of hex, e.g. "02ff35"
+ */
 fun ByteArray.toHex(): String = joinToString(separator = "") { it.toHex() }
 fun Byte.toHex(): String {
     val hex = toUByte().toInt().toString(16)
