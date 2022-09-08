@@ -17,6 +17,13 @@ interface IO {
      * Reads all [bytes] from the underlying IO. Blocks until the byte array is fully populated.
      */
     fun read(bytes: ByteArray)
+
+    fun readBytes(noBytes: Int): ByteArray {
+        require(noBytes >= 0) { "$noBytes: must be 0 or higher" }
+        val bytes = ByteArray(noBytes)
+        read(bytes)
+        return bytes
+    }
 }
 
 open class IOException(message: String?, cause: Throwable?) : Exception(message, cause) {
