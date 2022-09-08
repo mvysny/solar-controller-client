@@ -2,21 +2,28 @@ import kotlinx.cinterop.*
 import platform.posix.*
 
 interface Closeable {
+    /**
+     * Closes this closeable. Closing the same instance multiple times is undefined.
+     */
     fun close()
 }
 
 interface IO {
     /**
-     * Writes all [bytes] to the underlying IO.
+     * Writes all [bytes] to the underlying IO. Blocks until the bytes are written.
      */
     fun write(bytes: ByteArray)
     /**
-     * Reads at most [bytes] from the underlying IO. May also read 0 bytes, for example
-     * if this is a socket or a pipe and the read timed out. The function may also
-     * block while at least a single byte is read, this again depends on the underlying socket/pipe
-     * configuration.
+     * Reads all [bytes] from the underlying IO. Blocks until the byte array is fully populated.
      */
-    fun read(bytes: ByteArray): Int
+    fun read(bytes: ByteArray)
+}
+
+open class IOException(message: String?, cause: Throwable?) : Exception(message, cause) {
+    constructor(message: String?) : this(message, null)
+}
+open class EOFException(message: String?, cause: Throwable?) : IOException(message, cause) {
+    constructor(message: String?) : this(message, null)
 }
 
 open class IOFile(val fname: String) : IO, Closeable {
@@ -27,19 +34,30 @@ open class IOFile(val fname: String) : IO, Closeable {
         while (current < bytes.size) {
             bytes.usePinned { pinned ->
                 val bytesWritten: Long = checkNonNegativeLong("write") {
-                    write(fd, pinned.addressOf(0), bytes.size.toULong())
+                    write(fd, pinned.addressOf(current), (bytes.size - current).toULong())
                 }
                 current += bytesWritten.toInt()
             }
         }
     }
 
-    override fun read(bytes: ByteArray): Int {
-        TODO("Not yet implemented")
+    override fun read(bytes: ByteArray) {
+        var current = 0
+        while (current < bytes.size) {
+            bytes.usePinned { pinned ->
+                val bytesRead: Long = checkNonNegativeLong("read") {
+                    read(fd, pinned.addressOf(current), (bytes.size - current).toULong())
+                }
+                current += bytesRead.toInt()
+                if (bytesRead == 0L) {
+                    throw EOFException("EOF")
+                }
+            }
+        }
     }
 
     override fun close() {
-        close(fd)
+        checkZero("close") { close(fd) }
     }
 }
 

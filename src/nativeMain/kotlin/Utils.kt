@@ -7,7 +7,7 @@ fun <R: Comparable<R>> checkNative(op: String, range: ClosedRange<R>, call: () -
     val result: R = call()
     if (result !in range) {
         val err = strerror(errno)?.toKString() ?: ""
-        throw RuntimeException("Error $errno from $op: $err")
+        throw IOException("Error $errno from $op: $err")
     }
     return result
 }
