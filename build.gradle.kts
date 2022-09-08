@@ -5,6 +5,8 @@ plugins {
 group = "me.mavi"
 version = "1.0-SNAPSHOT"
 
+defaultTasks("clean", "build")
+
 repositories {
     mavenCentral()
 }
