@@ -56,11 +56,13 @@ interface IO {
     }
 }
 
-open class IOException(message: String, cause: Throwable?) : Exception(message, cause) {
-    constructor(message: String) : this(message, null)
-}
-open class EOFException(message: String) : IOException(message)
-open class FileNotFoundException(message: String) : IOException(message)
+/**
+ * A generic I/O exception.
+ * @param errno the [platform.posix.errno] value.
+ */
+open class IOException(message: String, cause: Throwable? = null, val errno: Int? = null) : Exception(message, cause)
+open class EOFException(message: String, cause: Throwable? = null) : IOException(message, cause)
+open class FileNotFoundException(message: String, cause: Throwable? = null) : IOException(message, cause, 2)
 
 /**
  * Reads/writes from/to a file with given [fname].

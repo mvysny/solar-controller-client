@@ -5,12 +5,13 @@ import platform.posix.strerror
 fun <R: Comparable<R>> checkNative(op: String, range: ClosedRange<R>, call: () -> R): R {
     val result: R = call()
     if (result !in range) {
-        val err = strerror(errno)?.toKString() ?: ""
-        val message = "Error $errno from $op: $err"
-        if (errno == 2) {
+        val e = errno
+        val err = strerror(e)?.toKString() ?: ""
+        val message = "Error $e from $op: $err"
+        if (e == 2) {
             throw FileNotFoundException(message)
         }
-        throw IOException(message)
+        throw IOException(message, null, e)
     }
     return result
 }
