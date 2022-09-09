@@ -93,8 +93,10 @@ open class IOFile(val fname: String) : IO, Closeable {
 class SerialPort(fname: String) : IOFile(fname) {
     /**
      * Configure the serial port to 9600 baud, 8 bits, 1 stop bit, no parity.
+     * @param baud the desired baud rate, one of the `B*` constants, e.g. [B9600].
+     * @param dataBits how many data bits per byte, one of the `CS*` constants, defaults to [CS8] (most common)
      */
-    fun configure() {
+    fun configure(baud: Int = B9600, dataBits: Int = CS8) {
         // taken from https://blog.mbedded.ninja/programming/operating-systems/linux/linux-serial-ports-using-c-cpp/#reading-and-writing
         memScoped {
             val tty: termios = alloc<termios>()
@@ -103,7 +105,7 @@ class SerialPort(fname: String) : IOFile(fname) {
             tty.c_cflag = tty.c_cflag.remove(PARENB) // Clear parity bit, disabling parity (most common)
             tty.c_cflag = tty.c_cflag.remove(CSTOPB) // Clear stop field, only one stop bit used in communication (most common)
             tty.c_cflag = tty.c_cflag.remove(CSIZE) // Clear all bits that set the data size
-            tty.c_cflag = tty.c_cflag.add(CS8) // 8 bits per byte (most common)
+            tty.c_cflag = tty.c_cflag.add(dataBits) // 8 bits per byte (most common)
             tty.c_cflag = tty.c_cflag.remove(CRTSCTS) // Disable RTS/CTS hardware flow control (most common)
             tty.c_cflag = tty.c_cflag.add(CREAD or CLOCAL) // Turn on READ & ignore ctrl lines (CLOCAL = 1)
 
@@ -124,8 +126,8 @@ class SerialPort(fname: String) : IOFile(fname) {
             tty.c_cc[VMIN] = 1.toUByte()  // block endlessly until at least 1 byte is read.
 
             // Set in/out baud rate to be 9600
-            checkZero("cfsetispeed") { cfsetispeed(tty.ptr, B9600) }
-            checkZero("cfsetospeed") { cfsetospeed(tty.ptr, B9600) }
+            checkZero("cfsetispeed") { cfsetispeed(tty.ptr, baud.toUInt()) }
+            checkZero("cfsetospeed") { cfsetospeed(tty.ptr, baud.toUInt()) }
 
             checkZero("tcsetattr") { tcsetattr(fd, TCSANOW, tty.ptr) }
         }
