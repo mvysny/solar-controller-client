@@ -108,7 +108,9 @@ open class IOFile(val fname: String) : IO, Closeable {
 }
 
 /**
- * A serial port file.
+ * A serial port IO, opens a serial port communication over given [fname].
+ *
+ * Don't forget to call [configure]!
  */
 class SerialPort(fname: String) : IOFile(fname) {
     /**
