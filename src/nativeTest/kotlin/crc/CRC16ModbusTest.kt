@@ -1,7 +1,6 @@
 package crc
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.expect
 
 class CRC16ModbusTest {
