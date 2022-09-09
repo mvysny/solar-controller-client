@@ -2,6 +2,7 @@
 
 import crc.CRC16Modbus
 import crc.crcOf
+import kotlin.experimental.and
 
 class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
     init {
@@ -63,13 +64,12 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
      * Retrieves the [SystemInfo] from the device.
      */
     fun getSystemInfo(): SystemInfo {
-        var result = readRegister(0x0A.toUShort(), 2.toUShort())
+        var result = readRegister(0x0A.toUShort(), 4.toUShort())
         val maxVoltage = result[0].toInt()
         val ratedChargingCurrent = result[1].toInt()
-
-        result = readRegister(0x0B.toUShort(), 2.toUShort())
-        val ratedDischargingCurrent = result[0].toInt()
-        val productType = result[1]
+        val ratedDischargingCurrent = result[2].toInt()
+        val productTypeNum = result[3]
+        val productType = ProductType.values().firstOrNull { it.modbusValue == productTypeNum }
 
         result = readRegister(0x0C.toUShort(), 16.toUShort())
         val productModel = result.toAsciiString().trim()
@@ -141,10 +141,81 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         return HistoricalData(daysUp, batteryOverDischargeCount, batteryFullChargeCount, totalChargingBatteryAH, totalDischargingBatteryAH, cumulativePowerGenerationWH, cumulativePowerConsumptionWH)
     }
 
-    // todo: charging state
+    /**
+     * Returns the current charging status and any current faults.
+     */
+    fun getStatus(): RenogyStatus {
+        val result = readRegister(0x120.toUShort(), 6.toUShort())
+        val streetLightOn = (result[0].toUByte() and 0x80.toUByte()) != 0.toUByte()
+        val streetLightBrightness = result[0].toUByte() and 0x7F.toUByte()
+        val chargingState = ChargingState.fromModbus(result[1].toUByte())
+        val faultBits = result.getUIntHiLoAt(2)
+        val faults = ControllerFaults.fromModbus(faultBits)
+        return RenogyStatus(streetLightOn, streetLightBrightness, chargingState, faults)
+    }
 
     companion object {
         private val COMMAND_READ_REGISTER: Byte = 0x03
+    }
+}
+
+/**
+ * @param streetLightOn Whether the street light is on or off
+ * @param streetLightBrightness street light brightness value, 0..100 in %
+ * @param chargingState charging state (if known)
+ * @param faults current faults, empty if none.
+ */
+data class RenogyStatus(
+    val streetLightOn: Boolean,
+    val streetLightBrightness: UByte,
+    val chargingState: ChargingState?,
+    val faults: Set<ControllerFaults>
+)
+
+enum class ChargingState(val value: UByte) {
+    ChargingDeactivated(0.toUByte()),
+    ChargingActivated(1.toUByte()),
+    MpptChargingMode(2.toUByte()),
+    EqualizingChargingMode(3.toUByte()),
+    BoostChargingMode(4.toUByte()),
+    FloatingChargingMode(5.toUByte()),
+    /**
+     * Current limiting (overpower)
+     */
+    CurrentLimiting(6.toUByte()),
+    ;
+    companion object {
+        fun fromModbus(value: UByte): ChargingState? =
+            values().firstOrNull { it.value == value }
+    }
+}
+
+enum class ControllerFaults(val bit: Int) {
+    CircuitChargeMOSShort(30),
+    AntiReverseMOSShort(29),
+    SolarPanelReverselyConnected(28),
+    SolarPanelWorkingPointOverVoltage(27),
+    SolarPanelCounterCurrent(26),
+    PhotovoltaicInputSideOverVoltage(25),
+    PhotovoltaicInputSideShortCircuit(24),
+    PhotovoltaicInputOverpower(23),
+    AmbientTemperatureTooHigh(22),
+    ControllerTemperatureTooHigh(21),
+    LoadOverpowerOrLoadOverCurrent(20),
+    LoadShortCircuit(19),
+    BatteryUnderVoltageWarning(18),
+    BatteryOverVoltage(17),
+    BatteryOverDischarge(16),
+    ;
+
+    private fun isPresent(modbusValue: UInt): Boolean {
+        val probe = 1.shl(bit)
+        return (modbusValue.toInt() and probe) != 0
+    }
+
+    companion object {
+        fun fromModbus(modbusValue: UInt): Set<ControllerFaults> =
+            values().filter { it.isPresent(modbusValue) } .toSet()
     }
 }
 
@@ -234,17 +305,18 @@ data class PowerStatus(
  * @property maxVoltage max. voltage supported by the system: 12V/24V/36V/48V/96V; 0xFF=automatic recognition of system voltage
  * @property ratedChargingCurrent rated charging current in A: 10A/20A/30A/45A/60A
  * @property ratedDischargingCurrent rated discharging current, 10A/20A/30A/45A/60A
- * @property productType product type, 0=controller, 1=inverter
+ * @property productType product type
  * @property productModel the controller's model
  * @property softwareVersion Vmajor.minor.bugfix
  * @property hardwareVersion Vmajor.minor.bugfix
- * @property serialNumber e.g. `1501FFFF`
+ * @property serialNumber serial number, 4 bytes formatted as a hex string, e.g. `1501FFFF`,
+ * indicating it's the 65535th (hexadecimal FFFFH) unit produced in Jan. of 2015.
  */
 data class SystemInfo(
     val maxVoltage: Int,
     val ratedChargingCurrent: Int,
     val ratedDischargingCurrent: Int,
-    val productType: Byte,
+    val productType: ProductType?,
     val productModel: String,
     val softwareVersion: String,
     val hardwareVersion: String,
@@ -253,6 +325,12 @@ data class SystemInfo(
     override fun toString(): String {
         return "SystemInfo(maxVoltage=$maxVoltage V, ratedChargingCurrent=$ratedChargingCurrent A, ratedDischargingCurrent=$ratedDischargingCurrent A, productType=$productType, productModel=$productModel, softwareVersion=$softwareVersion, hardwareVersion=$hardwareVersion, serialNumber=$serialNumber)"
     }
+}
+
+enum class ProductType(val modbusValue: Byte) {
+    Controller(0),
+    Inverter(1),
+    ;
 }
 
 /**
