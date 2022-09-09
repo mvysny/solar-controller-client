@@ -100,7 +100,7 @@ class SerialPort(fname: String) : IOFile(fname) {
         // taken from https://blog.mbedded.ninja/programming/operating-systems/linux/linux-serial-ports-using-c-cpp/#reading-and-writing
         memScoped {
             val tty: termios = alloc<termios>()
-            checkZero("tcgetattr") { tcgetattr(fd, tty.ptr) }
+            checkZero("tcgetattr (get serial port configuration) for $fname") { tcgetattr(fd, tty.ptr) }
 
             tty.c_cflag = tty.c_cflag.remove(PARENB) // Clear parity bit, disabling parity (most common)
             tty.c_cflag = tty.c_cflag.remove(CSTOPB) // Clear stop field, only one stop bit used in communication (most common)
@@ -129,7 +129,7 @@ class SerialPort(fname: String) : IOFile(fname) {
             checkZero("cfsetispeed") { cfsetispeed(tty.ptr, baud.toUInt()) }
             checkZero("cfsetospeed") { cfsetospeed(tty.ptr, baud.toUInt()) }
 
-            checkZero("tcsetattr") { tcsetattr(fd, TCSANOW, tty.ptr) }
+            checkZero("tcsetattr (set serial port configuration) for $fname") { tcsetattr(fd, TCSANOW, tty.ptr) }
         }
     }
 }
