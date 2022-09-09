@@ -25,10 +25,12 @@ fun <C: Closeable, R> C.use(block: (C) -> R): R {
 interface IO {
     /**
      * Writes all [bytes] to the underlying IO. Blocks until the bytes are written.
+     * Does nothing if the array is empty.
      */
     fun write(bytes: ByteArray)
     /**
      * Reads all [bytes] from the underlying IO. Blocks until the byte array is fully populated.
+     * Does nothing if the array is empty.
      */
     fun read(bytes: ByteArray)
 
