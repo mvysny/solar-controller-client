@@ -50,3 +50,14 @@ fun Byte.toHex(): String {
     val hex = toUByte().toInt().toString(16)
     return if (hex.length == 1) "0${hex}" else hex
 }
+fun UShort.toHex(): String = toInt().toString(16).padStart(4, '0')
+fun ByteArray.toAsciiString() = map { it.toUByte().toInt().toChar() } .toCharArray().concatToString()
+fun ByteArray.getUShortHiLoAt(index: Int): UShort {
+    require(index in 0..(size - 2)) { "Invalid value of $index: size=${size}" }
+    return ((get(index).toUByte().toUShort() * 256.toUShort()).toUShort() + get(index + 1).toUByte().toUShort()).toUShort()
+}
+fun ByteArray.setUShortHiLoAt(index: Int, value: UShort) {
+    require(index in 0..(size - 2)) { "Invalid value of $index: size=${size}" }
+    this[0] = ((value.toInt() and 0x000000ff)).toByte()
+    this[1] = ((value.toInt() and 0x0000ff00).ushr(8)).toByte()
+}

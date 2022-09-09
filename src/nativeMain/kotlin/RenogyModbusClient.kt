@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalUnsignedTypes::class)
+
 import crc.CRC16Modbus
+import crc.crcOf
 
 class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
     init {
@@ -8,53 +11,46 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
     /**
      * Performs the ReadRegister call and returns the data returned. Internal, don't use.
      */
-    fun readRegister(startAddress: UShort, noOfReadWords: UShort): ByteArray {
+    fun readRegister(startAddress: UShort, noOfReadBytes: UShort): ByteArray {
+        val noOfReadWords = (noOfReadBytes / 2.toUShort()).toUShort()
         require(noOfReadWords in 0x1.toUShort()..0x7D.toUShort()) { "$noOfReadWords: must be 0x0001..0x007D" }
 
         // prepare request
-        val request = byteArrayOf(deviceAddress, 0x03, startAddress.hibyte, startAddress.lobyte, noOfReadWords.hibyte, noOfReadWords.lobyte, 0, 0)
+        val request = byteArrayOf(deviceAddress, COMMAND_READ_REGISTER, startAddress.hibyte, startAddress.lobyte, noOfReadWords.hibyte, noOfReadWords.lobyte, 0, 0)
         val crc = CRC16Modbus()
         crc.update(request, 0, 6)
-        val crcBytes = crc.crcBytes
-        request[6] = crcBytes[0]
-        request[7] = crcBytes[1]
+        request.setUShortHiLoAt(6, crc.crc)
         io.write(request)
 
         // read response
-        val response = io.readBytes(3)
-        if (response[0] != deviceAddress) {
-            throw RenogyException("Invalid response: expected deviceAddress $deviceAddress but got ${response[0]}")
+        val responseHeader = io.readBytes(3)
+        if (responseHeader[0] != deviceAddress) {
+            throw RenogyException("Invalid response: expected deviceAddress $deviceAddress but got ${responseHeader[0]}")
         }
-        if (response[1] == 0x83.toByte()) {
+        if (responseHeader[1] == 0x83.toByte()) {
             // error response. First verify checksum.
-            crc.reset()
-            crc.update(response)
-            verifyChecksum(crc.crcBytes, io.readBytes(2))
-            throw RenogyException.fromCode(response[2])
+            verifyChecksum(crcOf(responseHeader), io.readBytes(2))
+            throw RenogyException.fromCode(responseHeader[2])
         }
-        if (response[1] != 0x03.toByte()) {
-            throw RenogyException("Unexpected response code: expected 3 but got ${response[1]}")
+        if (responseHeader[1] != 0x03.toByte()) {
+            throw RenogyException("Unexpected response code: expected 3 but got ${responseHeader[1]}")
         }
         // normal response. Read the data.
-        val dataLength = response[2].toUByte()
+        val dataLength = responseHeader[2].toUByte()
         require(dataLength in 1.toUByte()..0xFA.toUByte()) { "$dataLength: must be 0x01..0xFA" }
         val data = io.readBytes(dataLength.toInt())
         // verify the CRC
-        crc.reset()
-        crc.update(response)
-        crc.update(data)
-        verifyChecksum(crc.crcBytes, io.readBytes(2))
+        verifyChecksum(crcOf(responseHeader, data), io.readBytes(2))
 
-        require(dataLength.toUShort() == (noOfReadWords * 2.toUShort()).toUShort()) { "$dataLength: the call was expected to return ${noOfReadWords * 2.toUShort()} bytes" }
+        require(dataLength.toUShort() == noOfReadBytes) { "$dataLength: the call was expected to return $noOfReadBytes bytes" }
 
         // all OK. Return the response
         return data
     }
 
-    private fun verifyChecksum(actual: ByteArray, expected: ByteArray) {
+    private fun verifyChecksum(actual: UShort, expected: ByteArray) {
         require(expected.size == 2) { "${expected.toHex()}: must be of size 2" }
-        require(actual.size == 2) { "${actual.toHex()}: must be of size 2" }
-        if (actual[0] != expected[0] || actual[1] != expected[1]) {
+        if (actual != expected.getUShortHiLoAt(0)) {
             throw RenogyException("Checksum mismatch: expected ${expected.toHex()} but got ${actual.toHex()}")
         }
     }
@@ -90,12 +86,57 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
      * Retrieves the dynamic current status of the device, e.g. current voltage on
      * the solar panels.
      */
-    fun getStatus() {
+    fun getPowerStatus(): PowerStatus {
+        val result = readRegister(0x0100.toUShort(), 20.toUShort())
+        val batterySOC = result.getUShortHiLoAt(0)
+        val batteryVoltage = result.getUShortHiLoAt(2).toFloat() / 10
+        val chargingCurrentToBattery = result.getUShortHiLoAt(4).toFloat() / 100
+        val batteryTemp = result[7].toInt()
+        val controllerTemp = result[6].toInt()
+        val loadVoltage = result.getUShortHiLoAt(8).toFloat() / 10
+        val loadCurrent = result.getUShortHiLoAt(10).toFloat() / 100
+        val loadPower = result.getUShortHiLoAt(12)
+        val solarPanelVoltage = result.getUShortHiLoAt(14).toFloat() / 10
+        val solarPanelCurrent = result.getUShortHiLoAt(16).toFloat() / 100
+        val solarPanelPower = result.getUShortHiLoAt(18)
+        return PowerStatus(batterySOC, batteryVoltage, chargingCurrentToBattery, batteryTemp, controllerTemp, loadVoltage, loadCurrent, loadPower, solarPanelVoltage, solarPanelCurrent, solarPanelPower)
+    }
 
+    companion object {
+        private val COMMAND_READ_REGISTER: Byte = 0x03
     }
 }
 
-fun ByteArray.toAsciiString() = map { it.toInt().toChar() } .toCharArray().concatToString()
+/**
+ * @param batterySOC Current battery capacity value (state of charge), 0..100%
+ * @param batteryVoltage battery voltage in V
+ * @param chargingCurrentToBattery charging current (to battery), A
+ * @param batteryTemp battery temperature in °C
+ * @param controllerTemp controller temperature in °C
+ * @param loadVoltage Street light (load) voltage in V
+ * @param loadCurrent Street light (load) current in A
+ * @param loadPower Street light (load) power, in W
+ * @param solarPanelVoltage solar panel voltage, in V
+ * @param solarPanelCurrent Solar panel current (to controller), in A
+ * @param solarPanelPower charging power, in W
+ */
+data class PowerStatus(
+    val batterySOC: UShort,
+    val batteryVoltage: Float,
+    val chargingCurrentToBattery: Float,
+    val batteryTemp: Int,
+    val controllerTemp: Int,
+    val loadVoltage: Float,
+    val loadCurrent: Float,
+    val loadPower: UShort,
+    val solarPanelVoltage: Float,
+    val solarPanelCurrent: Float,
+    val solarPanelPower: UShort
+) {
+    override fun toString(): String {
+        return "PowerStatus(batterySOC=$batterySOC%, batteryVoltage=$batteryVoltage V, chargingCurrentToBattery=$chargingCurrentToBattery A, batteryTemp=$batteryTemp°C, controllerTemp=$controllerTemp°C, loadVoltage=$loadVoltage V, loadCurrent=$loadCurrent A, loadPower=$loadPower W, solarPanelVoltage=$solarPanelVoltage V, solarPanelCurrent=$solarPanelCurrent A, solarPanelPower=$solarPanelPower W)"
+    }
+}
 
 /**
  * The static system information: hw/sw version, specs etc.
@@ -119,7 +160,7 @@ data class SystemInfo(
     val serialNumber: String
 ) {
     override fun toString(): String {
-        return "SystemInfo(maxVoltage=$maxVoltage V, ratedChargingCurrent=$ratedChargingCurrent A, ratedDischargingCurrent=$ratedDischargingCurrent A, productType=$productType, productModel=$productModel, softwareVersion=$softwareVersion, hardwareVersion=$hardwareVersion)"
+        return "SystemInfo(maxVoltage=$maxVoltage V, ratedChargingCurrent=$ratedChargingCurrent A, ratedDischargingCurrent=$ratedDischargingCurrent A, productType=$productType, productModel=$productModel, softwareVersion=$softwareVersion, hardwareVersion=$hardwareVersion, serialNumber=$serialNumber)"
     }
 }
 

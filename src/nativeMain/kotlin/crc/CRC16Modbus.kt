@@ -14,6 +14,8 @@ class CRC16Modbus {
             return byteStr
         }
 
+    val crc: UShort get() = sum.toUShort()
+
     companion object {
         private val TABLE = intArrayOf(
             0x0000, 0xc0c1, 0xc181, 0x0140, 0xc301, 0x03c0, 0x0280, 0xc241, 0xc601, 0x06c0, 0x0780, 0xc741, 0x0500, 0xc5c1, 0xc481, 0x0440,
@@ -58,4 +60,17 @@ class CRC16Modbus {
             update(byte.toInt())
         }
     }
+}
+
+fun crcOf(bytes: ByteArray): UShort {
+    val crc = CRC16Modbus()
+    crc.update(bytes)
+    return crc.crc
+}
+
+fun crcOf(bytes1: ByteArray, bytes2: ByteArray): UShort {
+    val crc = CRC16Modbus()
+    crc.update(bytes1)
+    crc.update(bytes2)
+    return crc.crc
 }
