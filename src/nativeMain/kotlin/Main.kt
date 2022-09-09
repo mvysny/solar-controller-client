@@ -5,5 +5,7 @@ fun main(vararg params: String) {
         serialPort.configure()
         val client = RenogyModbusClient(serialPort)
         println(client.getSystemInfo())
+        println(client.getPowerStatus())
+        println(client.getDailyStats())
     }
 }

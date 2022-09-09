@@ -85,7 +85,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
     }
 
     /**
-     * Retrieves the dynamic current status of the device, e.g. current voltage on
+     * Retrieves the current status of the device, e.g. current voltage on
      * the solar panels.
      */
     fun getPowerStatus(): PowerStatus {
@@ -104,8 +104,56 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         return PowerStatus(batterySOC, batteryVoltage, chargingCurrentToBattery, batteryTemp, controllerTemp, loadVoltage, loadCurrent, loadPower, solarPanelVoltage, solarPanelCurrent, solarPanelPower)
     }
 
+    /**
+     * Returns the daily statistics.
+     */
+    fun getDailyStats(): DailyStats {
+        val result = readRegister(0x010B.toUShort(), 20.toUShort())
+        val batteryMinVoltage: Float = result.getUShortHiLoAt(0).toFloat() / 10
+        val batteryMaxVoltage: Float = result.getUShortHiLoAt(2).toFloat() / 10
+        val maxChargingCurrent: Float = result.getUShortHiLoAt(4).toFloat() / 100
+        val maxDischargingCurrent: Float = result.getUShortHiLoAt(6).toFloat() / 100
+        val maxChargingPower: UShort = result.getUShortHiLoAt(8)
+        val maxDischargingPower: UShort = result.getUShortHiLoAt(10)
+        val chargingAmpHours: UShort = result.getUShortHiLoAt(12)
+        val dischargingAmpHours: UShort = result.getUShortHiLoAt(14)
+        val powerGeneration: Float = result.getUShortHiLoAt(16).toFloat() / 10
+        val powerConsumption: Float = result.getUShortHiLoAt(18).toFloat() / 10
+        return DailyStats(batteryMinVoltage, batteryMaxVoltage, maxChargingCurrent, maxDischargingCurrent, maxChargingPower, maxDischargingPower, chargingAmpHours, dischargingAmpHours, powerGeneration, powerConsumption)
+    }
+
     companion object {
         private val COMMAND_READ_REGISTER: Byte = 0x03
+    }
+}
+
+/**
+ * The daily statistics.
+ * @param batteryMinVoltage Battery's min. voltage of the current day, V
+ * @param batteryMaxVoltage Battery's max. voltage of the current day, V
+ * @param maxChargingCurrent Max. charging current of the current day, A
+ * @param maxDischargingCurrent Max. discharging current of the current day, A
+ * @param maxChargingPower Max. charging power of the current day, W
+ * @param maxDischargingPower Max. discharging power of the current day, W
+ * @param chargingAmpHours Charging amp-hrs of the current day, AH
+ * @param dischargingAmpHours Discharging amp-hrs of the current day, AH
+ * @param powerGeneration Power generation of the current day, WH
+ * @param powerConsumption Power generation of the current day, WH
+ */
+data class DailyStats(
+    val batteryMinVoltage: Float,
+    val batteryMaxVoltage: Float,
+    val maxChargingCurrent: Float,
+    val maxDischargingCurrent: Float,
+    val maxChargingPower: UShort,
+    val maxDischargingPower: UShort,
+    val chargingAmpHours: UShort,
+    val dischargingAmpHours: UShort,
+    val powerGeneration: Float,
+    val powerConsumption: Float
+) {
+    override fun toString(): String {
+        return "DailyStats(batteryMinVoltage=$batteryMinVoltage V, batteryMaxVoltage=$batteryMaxVoltage V, maxChargingCurrent=$maxChargingCurrent A, maxDischargingCurrent=$maxDischargingCurrent A, maxChargingPower=$maxChargingPower W, maxDischargingPower=$maxDischargingPower W, chargingAmpHours=$chargingAmpHours AH, dischargingAmpHours=$dischargingAmpHours AH, powerGeneration=$powerGeneration WH, powerConsumption=$powerConsumption WH)"
     }
 }
 

@@ -68,14 +68,14 @@ fun ByteArray.toAsciiString() = map { it.toUByte().toInt().toChar() } .toCharArr
 /**
  * Returns the [UShort] value at [index] and [index]+1. High byte first, then the low byte.
  */
-fun ByteArray.getUShortHiLoAt(index: Int): UShort {
+inline fun ByteArray.getUShortHiLoAt(index: Int): UShort {
     require(index in 0..(size - 2)) { "Invalid value of $index: size=${size}" }
     return ((get(index).toUByte().toUShort() * 256.toUShort()).toUShort() + get(index + 1).toUByte().toUShort()).toUShort()
 }
 /**
  * Sets the [UShort] value at [index] and [index]+1. High byte first, then the low byte.
  */
-fun ByteArray.setUShortHiLoAt(index: Int, value: UShort) {
+inline fun ByteArray.setUShortHiLoAt(index: Int, value: UShort) {
     require(index in 0..(size - 2)) { "Invalid value of $index: size=${size}" }
     this[index + 1] = ((value.toInt() and 0x000000ff)).toByte()
     this[index] = ((value.toInt() and 0x0000ff00).ushr(8)).toByte()
