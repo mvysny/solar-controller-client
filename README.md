@@ -27,7 +27,7 @@ Optionally dump into JSON as well. Perhaps integration with Home Assistant? Over
 4. Copy the binary to your Raspberry PI.
 
 Kotlin/Native at the moment doesn't support building on arm64: you'll get
-"unknown host target: linux aarch64" error if you try. See the
+"Could not find :kotlin-native-prebuilt-linux-aarch64:1.7.10" error if you try. See the
 [getting 'unknown host target: linux aarch64'](https://discuss.kotlinlang.org/t/kotlin-native-getting-unknown-host-target-linux-aarch64-on-raspberry-pi-3b-ubuntu-21-04-aarch64/22874)
 forum and also [KT-42445](https://youtrack.jetbrains.com/issue/KT-42445) for more details.
 
