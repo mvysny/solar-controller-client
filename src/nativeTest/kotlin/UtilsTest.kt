@@ -27,6 +27,16 @@ class UtilsTest {
         expect(0xFEFD.toUShort()) { bytes.getUShortHiLoAt(1) }
     }
 
+
+    @Test
+    fun testGetUIntHiLoAt() {
+        var bytes = byteArrayOf(0, 1, 2, 3, 4)
+        expect(0x00010203.toUInt()) { bytes.getUIntHiLoAt(0) }
+        expect(0x01020304.toUInt()) { bytes.getUIntHiLoAt(1) }
+        bytes = byteArrayOf(0xFF.toByte(), 0xFE.toByte(), 0xFD.toByte(), 0xFC.toByte())
+        expect(0xFFFEFDFC.toUInt()) { bytes.getUIntHiLoAt(0) }
+    }
+
     @Test
     fun testToAsciiString() {
         expect("    MT4830      ") {

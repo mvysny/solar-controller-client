@@ -76,7 +76,20 @@ inline fun ByteArray.getUShortHiLoAt(index: Int): UShort {
  * Sets the [UShort] value at [index] and [index]+1. High byte first, then the low byte.
  */
 inline fun ByteArray.setUShortHiLoAt(index: Int, value: UShort) {
-    require(index in 0..(size - 2)) { "Invalid value of $index: size=${size}" }
+    require(index in 0..(size - 2)) { "Invalid index $index: size=${size}" }
     this[index + 1] = ((value.toInt() and 0x000000ff)).toByte()
     this[index] = ((value.toInt() and 0x0000ff00).ushr(8)).toByte()
+}
+
+/**
+ * Returns the [UShort] value at [index]..[index]+1. Highest byte first, then the lowest byte.
+ */
+inline fun ByteArray.getUIntHiLoAt(index: Int): UInt {
+    require(index in 0..(size - 4)) { "Invalid index $index: size=${size}" }
+    var result: UInt = 0.toUInt()
+    result = result.shl(8) + this[index].toUByte().toUInt()
+    result = result.shl(8) + this[index + 1].toUByte().toUInt()
+    result = result.shl(8) + this[index + 2].toUByte().toUInt()
+    result = result.shl(8) + this[index + 3].toUByte().toUInt()
+    return result
 }

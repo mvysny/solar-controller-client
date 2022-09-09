@@ -124,6 +124,11 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         return DailyStats(batteryMinVoltage, batteryMaxVoltage, maxChargingCurrent, maxDischargingCurrent, maxChargingPower, maxDischargingPower, chargingAmpHours, dischargingAmpHours, powerGeneration, powerConsumption)
     }
 
+    fun getHistoricalData() {
+        val result = readRegister(0x0115.toUShort(), 22.toUShort())
+
+    }
+
     companion object {
         private val COMMAND_READ_REGISTER: Byte = 0x03
     }
