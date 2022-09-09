@@ -59,6 +59,9 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         }
     }
 
+    /**
+     * Retrieves the [SystemInfo] from the device.
+     */
     fun getSystemInfo(): SystemInfo {
         var result = readRegister(0x0A.toUShort(), 2.toUShort())
         val maxVoltage = result[0].toInt()
@@ -82,11 +85,20 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
 
         return SystemInfo(maxVoltage,ratedChargingCurrent, ratedDischargingCurrent, productType, productModel, softvareVersion, hardwareVersion, serialNumber)
     }
+
+    /**
+     * Retrieves the dynamic current status of the device, e.g. current voltage on
+     * the solar panels.
+     */
+    fun getStatus() {
+
+    }
 }
 
 fun ByteArray.toAsciiString() = map { it.toInt().toChar() } .toCharArray().concatToString()
 
 /**
+ * The static system information: hw/sw version, specs etc.
  * @property maxVoltage max. voltage supported by the system: 12V/24V/36V/48V/96V; 0xFF=automatic recognition of system voltage
  * @property ratedChargingCurrent rated charging current in A: 10A/20A/30A/45A/60A
  * @property ratedDischargingCurrent rated discharging current, 10A/20A/30A/45A/60A

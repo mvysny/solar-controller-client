@@ -8,7 +8,10 @@ interface Closeable {
     fun close()
 }
 
-fun <T: Closeable, R> T.use(block: (T) -> R): R {
+/**
+ * Runs [block] with given closeable and closes the closeable afterwards.
+ */
+fun <C: Closeable, R> C.use(block: (C) -> R): R {
     try {
         return block(this)
     } finally {
@@ -16,6 +19,9 @@ fun <T: Closeable, R> T.use(block: (T) -> R): R {
     }
 }
 
+/**
+ * An IO pipe supporting most basic operations.
+ */
 interface IO {
     /**
      * Writes all [bytes] to the underlying IO. Blocks until the bytes are written.
@@ -26,6 +32,9 @@ interface IO {
      */
     fun read(bytes: ByteArray)
 
+    /**
+     * Reads [noBytes] and returns it in a newly allocated byte array.
+     */
     fun readBytes(noBytes: Int): ByteArray {
         require(noBytes >= 0) { "$noBytes: must be 0 or higher" }
         val bytes = ByteArray(noBytes)
@@ -41,6 +50,9 @@ open class EOFException(message: String) : IOException(message)
 open class FileNotFoundException(message: String) : IOException(message)
 
 open class IOFile(val fname: String) : IO, Closeable {
+    init {
+        require(fname.isNotBlank()) { "fname is blank" }
+    }
     protected val fd: Int = checkNonNegative("open $fname") { open(fname, O_RDWR) }
 
     override fun write(bytes: ByteArray) {
@@ -80,7 +92,7 @@ open class IOFile(val fname: String) : IO, Closeable {
  */
 class SerialPort(fname: String) : IOFile(fname) {
     /**
-     * Configure the serial port to 9600 baud, 8 bits, 1 stop bit, no parity
+     * Configure the serial port to 9600 baud, 8 bits, 1 stop bit, no parity.
      */
     fun configure() {
         // taken from https://blog.mbedded.ninja/programming/operating-systems/linux/linux-serial-ports-using-c-cpp/#reading-and-writing
@@ -109,7 +121,7 @@ class SerialPort(fname: String) : IOFile(fname) {
             // tty.c_oflag &= ~ONOEOT; // Prevent removal of C-d chars (0x004) in output (NOT PRESENT ON LINUX)
 
             tty.c_cc[VTIME] = 10.toUByte()    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
-            tty.c_cc[VMIN] = 1.toUByte()
+            tty.c_cc[VMIN] = 1.toUByte()  // block endlessly until at least 1 byte is read.
 
             // Set in/out baud rate to be 9600
             checkZero("cfsetispeed") { cfsetispeed(tty.ptr, B9600) }
