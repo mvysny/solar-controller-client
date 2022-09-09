@@ -19,7 +19,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         val request = byteArrayOf(deviceAddress, COMMAND_READ_REGISTER, startAddress.hibyte, startAddress.lobyte, noOfReadWords.hibyte, noOfReadWords.lobyte, 0, 0)
         val crc = CRC16Modbus()
         crc.update(request, 0, 6)
-        request.setUShortHiLoAt(6, crc.crc)
+        request.setUShortAt(6, crc.crc) // for CRC, low byte is sent first, then the high byte.
         io.write(request)
 
         // read response
@@ -29,7 +29,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         }
         if (responseHeader[1] == 0x83.toByte()) {
             // error response. First verify checksum.
-            verifyChecksum(crcOf(responseHeader), io.readBytes(2))
+            verifyCRC(crcOf(responseHeader), io.readBytes(2))
             throw RenogyException.fromCode(responseHeader[2])
         }
         if (responseHeader[1] != 0x03.toByte()) {
@@ -40,7 +40,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         require(dataLength in 1.toUByte()..0xFA.toUByte()) { "$dataLength: must be 0x01..0xFA" }
         val data = io.readBytes(dataLength.toInt())
         // verify the CRC
-        verifyChecksum(crcOf(responseHeader, data), io.readBytes(2))
+        verifyCRC(crcOf(responseHeader, data), io.readBytes(2))
 
         require(dataLength.toUShort() == noOfReadBytes) { "$dataLength: the call was expected to return $noOfReadBytes bytes" }
 
@@ -48,10 +48,12 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         return data
     }
 
-    private fun verifyChecksum(actual: UShort, expected: ByteArray) {
+    private fun verifyCRC(actual: UShort, expected: ByteArray) {
         require(expected.size == 2) { "${expected.toHex()}: must be of size 2" }
-        if (actual != expected.getUShortHiLoAt(0)) {
-            throw RenogyException("Checksum mismatch: expected ${expected.toHex()} but got ${actual.toHex()}")
+        // for CRC, low byte is sent first, then the high byte.
+        val expectedUShort = expected.getUShortAt(0)
+        if (actual != expectedUShort) {
+            throw RenogyException("Checksum mismatch: expected ${expectedUShort.toHex()} but got ${actual.toHex()}")
         }
     }
 

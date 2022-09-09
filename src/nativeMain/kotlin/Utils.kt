@@ -46,18 +46,37 @@ inline val UShort.lobyte: Byte get() = this.and(0xFF.toUShort()).toByte()
  * Formats this byte array as a string of hex, e.g. "02ff35"
  */
 fun ByteArray.toHex(): String = joinToString(separator = "") { it.toHex() }
+
+/**
+ * Formats this byte as a 2-character hex value, e.g. "03" or "fe".
+ */
 fun Byte.toHex(): String {
     val hex = toUByte().toInt().toString(16)
     return if (hex.length == 1) "0${hex}" else hex
 }
+
+/**
+ * Formats this [UShort] as a 4-character hex value, e.g. "0000" or "ffff".
+ */
 fun UShort.toHex(): String = toInt().toString(16).padStart(4, '0')
+
+/**
+ * Converts every byte in the array to char and concatenates it as a string. Pure ASCII is used, no UTF-8 conversion is done.
+ */
 fun ByteArray.toAsciiString() = map { it.toUByte().toInt().toChar() } .toCharArray().concatToString()
+
+/**
+ * Returns the [UShort] value at [index] and [index]+1. High byte first, then the low byte.
+ */
 fun ByteArray.getUShortHiLoAt(index: Int): UShort {
     require(index in 0..(size - 2)) { "Invalid value of $index: size=${size}" }
     return ((get(index).toUByte().toUShort() * 256.toUShort()).toUShort() + get(index + 1).toUByte().toUShort()).toUShort()
 }
+/**
+ * Sets the [UShort] value at [index] and [index]+1. High byte first, then the low byte.
+ */
 fun ByteArray.setUShortHiLoAt(index: Int, value: UShort) {
     require(index in 0..(size - 2)) { "Invalid value of $index: size=${size}" }
-    this[0] = ((value.toInt() and 0x000000ff)).toByte()
-    this[1] = ((value.toInt() and 0x0000ff00).ushr(8)).toByte()
+    this[index + 1] = ((value.toInt() and 0x000000ff)).toByte()
+    this[index] = ((value.toInt() and 0x0000ff00).ushr(8)).toByte()
 }
