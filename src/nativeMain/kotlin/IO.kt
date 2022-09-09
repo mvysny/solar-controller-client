@@ -9,13 +9,24 @@ interface Closeable {
 }
 
 /**
+ * Closes this closeable. Calls [Closeable.close] but catches any exception and prints it to stderr.
+ */
+fun Closeable.closeQuietly() {
+    try {
+        close()
+    } catch (e: Exception) {
+        eprintln("$this: close failed: $e")
+    }
+}
+
+/**
  * Runs [block] with given closeable and closes the closeable afterwards.
  */
 fun <C: Closeable, R> C.use(block: (C) -> R): R {
     try {
         return block(this)
     } finally {
-        close()
+        closeQuietly()
     }
 }
 
@@ -51,6 +62,9 @@ open class IOException(message: String, cause: Throwable?) : Exception(message, 
 open class EOFException(message: String) : IOException(message)
 open class FileNotFoundException(message: String) : IOException(message)
 
+/**
+ * Reads/writes from/to a file with given [fname].
+ */
 open class IOFile(val fname: String) : IO, Closeable {
     init {
         require(fname.isNotBlank()) { "fname is blank" }
@@ -87,6 +101,8 @@ open class IOFile(val fname: String) : IO, Closeable {
     override fun close() {
         checkZero("close") { close(fd) }
     }
+
+    override fun toString(): String = "IOFile('$fname')"
 }
 
 /**
@@ -134,4 +150,6 @@ class SerialPort(fname: String) : IOFile(fname) {
             checkZero("tcsetattr (set serial port configuration) for $fname") { tcsetattr(fd, TCSANOW, tty.ptr) }
         }
     }
+
+    override fun toString(): String = "SerialPort('$fname')"
 }

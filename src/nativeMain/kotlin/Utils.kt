@@ -93,3 +93,13 @@ inline fun ByteArray.getUIntHiLoAt(index: Int): UInt {
     result = result.shl(8) + this[index + 3].toUByte().toUInt()
     return result
 }
+
+private val STDERR = platform.posix.fdopen(2, "w")
+
+/**
+ * Prints [message] to STDERR.
+ */
+fun eprintln(message: String) {
+    platform.posix.fprintf(STDERR, "%s\n", message)
+    platform.posix.fflush(STDERR)
+}
