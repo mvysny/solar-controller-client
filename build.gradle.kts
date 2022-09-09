@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+
 plugins {
     kotlin("multiplatform") version "1.7.10"
 }
@@ -12,13 +14,20 @@ repositories {
 }
 
 kotlin {
-    val hostOs = System.getProperty("os.name")
-    val isMingwX64 = hostOs.startsWith("Windows")
-    val nativeTarget = when {
-        hostOs == "Mac OS X" -> macosX64("native")
-        hostOs == "Linux" -> linuxX64("native")
-        isMingwX64 -> mingwX64("native")
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+    val nativeTarget: KotlinNativeTarget
+    val buildForArm64 = project.properties.containsKey("arm")
+    val buildForArm32 = project.properties.containsKey("arm32")
+    if (buildForArm64 || buildForArm32) {
+        nativeTarget = if (buildForArm64) linuxArm64("native") else linuxArm32Hfp("native")
+    } else {
+        val hostOs = System.getProperty("os.name")
+        val isMingwX64 = hostOs.startsWith("Windows")
+        nativeTarget = when {
+            hostOs == "Mac OS X" -> macosX64("native")
+            hostOs == "Linux" -> linuxX64("native")
+            isMingwX64 -> mingwX64("native")
+            else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+        }
     }
 
     nativeTarget.apply {

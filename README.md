@@ -18,13 +18,17 @@ Optionally dump into JSON as well. Perhaps integration with Home Assistant? Over
 
 # Compiling
 
-Build with `./gradlew`. Find the binary in `build/bin/native/releaseExecutable`.
+1. Install Java JDK 11+: `sudo apt install openjdk-11-jdk`
+2. Build with `./gradlew`. Find the binary in `build/bin/native/releaseExecutable`.
+3. Copy the binary to your Raspberry PI.
 
-To compile for Raspberry PI, you have to compile for ARM. Edit the `build.gradle.kts`
-file and change the `val nativeTarget=` to:
+> Note: the build is quite demanding: I'm not sure whether it will work on Raspberry PI. You can
+> run the build on your machine (Linux/Windows/Mac) then copy the resulting binary to RPI.
 
-* 64-bit OS: `val nativeTarget = linuxArm64("native")`
-* 32-bit OS: `val nativeTarget = linuxArm32Hfp("native")`
+To compile for Raspberry PI, build with:
+
+* `./gradlew -Parm` for 64-bit OS
+* `./gradlew -Parm32` for 32-bit OS
 
 For other target platforms please see [Kotlin/Native Targets](https://kotlinlang.org/docs/multiplatform-dsl-reference.html#targets).
 
