@@ -37,7 +37,9 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         }
         // normal response. Read the data.
         val dataLength = responseHeader[2].toUByte()
-        require(dataLength in 1.toUByte()..0xFA.toUByte()) { "$dataLength: must be 0x01..0xFA" }
+        if (dataLength !in 1.toUByte()..0xFA.toUByte()) {
+            throw RenogyException("$dataLength: dataLength must be 0x01..0xFA")
+        }
         val data = io.readBytes(dataLength.toInt())
         // verify the CRC
         verifyCRC(crcOf(responseHeader, data), io.readBytes(2))
@@ -214,15 +216,23 @@ data class SystemInfo(
     }
 }
 
-class RenogyException(message: String) : Exception(message) {
+/**
+ * Thrown when Renogy returns a failure.
+ * @param code the error code as received from Renogy. See [fromCode] for a list of
+ * defined error codes. May be null if thrown because the response was mangled.
+ */
+class RenogyException(message: String, val code: Byte? = null) : Exception(message) {
     companion object {
-        fun fromCode(code: Byte): RenogyException = when(code) {
-            0x01.toByte() -> RenogyException("0x01: Function code not supported")
-            0x02.toByte() -> RenogyException("0x02: PDU start address is not correct or PDU start address + data length")
-            0x03.toByte() -> RenogyException("0x03: Data length in reading or writing register is too large")
-            0x04.toByte() -> RenogyException("0x04: Client fails to read or write register")
-            0x05.toByte() -> RenogyException("0x05: Data check code sent by server is not correct")
-            else -> RenogyException("$code: Unknown")
+        fun fromCode(code: Byte): RenogyException {
+            val message = when(code) {
+                0x01.toByte() -> "Function code not supported"
+                0x02.toByte() -> "PDU start address is not correct or PDU start address + data length"
+                0x03.toByte() -> "Data length in reading or writing register is too large"
+                0x04.toByte() -> "Client fails to read or write register"
+                0x05.toByte() -> "Data check code sent by server is not correct"
+                else -> "Unknown"
+            }
+            return RenogyException("0x${code.toHex()}: $message", code)
         }
     }
 }
