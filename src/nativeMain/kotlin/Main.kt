@@ -7,5 +7,6 @@ fun main(vararg params: String) {
         println(client.getSystemInfo())
         println(client.getPowerStatus())
         println(client.getDailyStats())
+        println(client.getHistoricalData())
     }
 }
