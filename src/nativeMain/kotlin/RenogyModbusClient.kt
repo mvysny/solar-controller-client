@@ -94,6 +94,8 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         val result = readRegister(0x0100.toUShort(), 20.toUShort())
         val batterySOC = result.getUShortHiLoAt(0)
         val batteryVoltage = result.getUShortHiLoAt(2).toFloat() / 10
+        // @todo in modbus spec examples, there's no chargingCurrentToBattery, and
+        // batteryTemp is a WORD at 0x102 and controllerTemp is a WORD at 0x103 - check!
         val chargingCurrentToBattery = result.getUShortHiLoAt(4).toFloat() / 100
         val batteryTemp = result[7].toInt()
         val controllerTemp = result[6].toInt()
@@ -124,15 +126,47 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         return DailyStats(batteryMinVoltage, batteryMaxVoltage, maxChargingCurrent, maxDischargingCurrent, maxChargingPower, maxDischargingPower, chargingAmpHours, dischargingAmpHours, powerGeneration, powerConsumption)
     }
 
-    fun getHistoricalData() {
+    /**
+     * Returns the historical data summary.
+     */
+    fun getHistoricalData(): HistoricalData {
         val result = readRegister(0x0115.toUShort(), 22.toUShort())
-
+        val daysUp: UShort = result.getUShortHiLoAt(0)
+        val batteryOverDischargeCount: UShort = result.getUShortHiLoAt(2)
+        val batteryFullChargeCount: UShort = result.getUShortHiLoAt(4)
+        val totalChargingBatteryAH: UInt = result.getUIntHiLoAt(6)
+        val totalDischargingBatteryAH: UInt = result.getUIntHiLoAt(10)
+        val cumulativePowerGenerationWH: Float = result.getUIntHiLoAt(14).toFloat() / 10
+        val cumulativePowerConsumptionWH: Float = result.getUIntHiLoAt(18).toFloat() / 10
+        return HistoricalData(daysUp, batteryOverDischargeCount, batteryFullChargeCount, totalChargingBatteryAH, totalDischargingBatteryAH, cumulativePowerGenerationWH, cumulativePowerConsumptionWH)
     }
+
+    // todo: charging state
 
     companion object {
         private val COMMAND_READ_REGISTER: Byte = 0x03
     }
 }
+
+/**
+ * Historical data summary
+ * @param daysUp Total number of operating days
+ * @param batteryOverDischargeCount Total number of battery over-discharges
+ * @param batteryFullChargeCount Total number of battery full-charges
+ * @param totalChargingBatteryAH Total charging amp-hrs of the battery
+ * @param totalDischargingBatteryAH Total discharging amp-hrs of the battery
+ * @param cumulativePowerGenerationWH cumulative power generation in WH
+ * @param cumulativePowerConsumptionWH cumulative power consumption in WH
+ */
+data class HistoricalData(
+    val daysUp: UShort,
+    val batteryOverDischargeCount: UShort,
+    val batteryFullChargeCount: UShort,
+    val totalChargingBatteryAH: UInt,
+    val totalDischargingBatteryAH: UInt,
+    val cumulativePowerGenerationWH: Float,
+    val cumulativePowerConsumptionWH: Float
+)
 
 /**
  * The daily statistics.
