@@ -2,7 +2,6 @@
 
 import crc.CRC16Modbus
 import crc.crcOf
-import kotlin.experimental.and
 
 class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
     init {

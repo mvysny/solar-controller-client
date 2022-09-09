@@ -39,4 +39,12 @@ class RenogyModbusClientTest {
         buffer.expectWrittenBytes("0103000c0008840f")
         expect("202020204d5434383330202020202020") { response.toHex() }
     }
+
+    @Test
+    fun testControllerFaults() {
+        expect(setOf()) { ControllerFaults.fromModbus(0.toUInt()) }
+        expect(setOf(ControllerFaults.PhotovoltaicInputSideShortCircuit, ControllerFaults.BatteryOverDischarge)) {
+            ControllerFaults.fromModbus(0x01010000.toUInt())
+        }
+    }
 }
