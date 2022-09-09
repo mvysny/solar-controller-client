@@ -1,9 +1,18 @@
 import kotlin.test.expect
 
+/**
+ * A memory buffer, stores all written bytes to [writtenBytes]; [read] will offer
+ * bytes from [toReturn].
+ */
 class Buffer : IO {
     // not very effective, but this is just for testing purposes
     val writtenBytes = mutableListOf<Byte>()
     val toReturn = mutableListOf<Byte>()
+
+    /**
+     * The current read pointer; next call to [read] will return byte from [toReturn]
+     * at this index. Automatically increased as [read] is called further.
+     */
     var readPointer = 0
 
     override fun write(bytes: ByteArray) {
