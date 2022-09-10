@@ -66,12 +66,17 @@ open class FileNotFoundException(message: String, cause: Throwable? = null) : IO
 
 /**
  * Reads/writes from/to a file with given [fname].
+ * @param oflag the open file flag, one of `O_*` constants. Most useful combos:
+ * `O_WRONLY or O_TRUNC or O_CREAT` overwrites the file with a zero-sized one;
+ * `O_WRONLY or O_APPEND or O_CREAT` starts writing at the end of the file, creating it if necessary;
+ * `O_RDWR` - opens the file for read/write; the file must exist.
+ * @param mode the file mode when it's created, e.g. `S_IRWXU`.
  */
-open class IOFile(val fname: String) : IO, Closeable {
+open class IOFile(val fname: String, oflag: Int = O_RDWR, mode: Int = 0) : IO, Closeable {
     init {
         require(fname.isNotBlank()) { "fname is blank" }
     }
-    protected val fd: Int = checkNonNegative("open $fname") { open(fname, O_RDWR) }
+    protected val fd: Int = checkNonNegative("open $fname") { open(fname, oflag, mode) }
 
     override fun write(bytes: ByteArray) {
         var current = 0
@@ -158,6 +163,10 @@ class SerialPort(fname: String) : IOFile(fname) {
     override fun toString(): String = "SerialPort('$fname')"
 }
 
+private val rwrwr = S_IRUSR or S_IWUSR or S_IRGRP or S_IWGRP or S_IROTH
 fun writeToFile(fname: String, contents: String) {
-    IOFile(fname).use { file -> file.write(contents.encodeToByteArray()) }
+    IOFile(fname, O_WRONLY or O_TRUNC or O_CREAT, rwrwr).use { file -> file.write(contents.encodeToByteArray()) }
+}
+fun appendToFile(fname: String, contents: String) {
+    IOFile(fname, O_WRONLY or O_APPEND or O_CREAT, rwrwr).use { file -> file.write(contents.encodeToByteArray()) }
 }

@@ -10,8 +10,6 @@ fun main(args: Array<String>) {
     val pollingInterval by parser.option(ArgType.Int, fullName = "pollinginterval", shortName = "i", description = "in seconds: how frequently to poll the controller for data, defaults to 10")
     parser.parse(args)
 
-    writeToFile(device, "Hahaaaaa!")
-
     SerialPort(device).use { serialPort ->
         serialPort.configure()
         val client = RenogyModbusClient(serialPort)
