@@ -157,3 +157,7 @@ class SerialPort(fname: String) : IOFile(fname) {
 
     override fun toString(): String = "SerialPort('$fname')"
 }
+
+fun writeToFile(fname: String, contents: String) {
+    IOFile(fname).use { file -> file.write(contents.encodeToByteArray()) }
+}
