@@ -110,3 +110,14 @@ fun eprintln(message: String) {
     platform.posix.fprintf(STDERR, "%s\n", message)
     platform.posix.fflush(STDERR)
 }
+
+/**
+ * Returns the current date and time, in the format of 2022-09-11 00:14:45
+ */
+fun getLocalDateTime(): String {
+    val t = checkNonNegativeLong("time") { time(null) }
+    val tm = localtime(cValuesOf(t))!!.pointed
+    val yyyymmdd = "${tm.tm_year + 1900}-${(tm.tm_mon + 1).toString().padStart(2, '0')}-${tm.tm_mday.toString().padStart(2, '0')}"
+    val hhmmss = "${tm.tm_hour.toString().padStart(2, '0')}:${tm.tm_min.toString().padStart(2, '0')}:${tm.tm_sec.toString().padStart(2, '0')}"
+    return "$yyyymmdd $hhmmss"
+}

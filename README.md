@@ -128,6 +128,4 @@ TODO the example CSV file.
 Tasks to do:
 
 * finalize the format of the CSV
-* Use kotlinx-datetime to format date+time
-* Respond to signals and CTRL+C and terminate cleanly, closing the pipe
-* Also optionally dump a HTML file which can be served over nginx
+* Also optionally dump a HTML file which can be served over python3
