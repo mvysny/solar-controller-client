@@ -51,10 +51,17 @@ For other target platforms please see [Kotlin/Native Targets](https://kotlinlang
 Pass in the device file name of tty connected to the Renogy, e.g.
 
 ```bash
+$ solar-controller-client.kexe /dev/ttyUSB0 --status
+```
+
+That will cause the app will only print status and quit. To continuously poll the device for data, run
+
+```bash
 $ solar-controller-client.kexe /dev/ttyUSB0
 ```
 
-At the moment the app will only print status and quit. Development is ongoing.
+The program will overwrite `status.json` file with the new data polled from the device;
+the program will also start appending the information to `log.csv` so that you have historic data.
 
 The status JSON example:
 ```json
@@ -114,20 +121,11 @@ The status JSON example:
 }
 ```
 
+TODO the example CSV file.
+
 # Further development
 
 Tasks to do:
-
-* Add command-line parameters:
-  * `--status` will simply print the Renogy Rover status as JSON to stdout and quit
-  * default mode will periodically watch controller and add rows to `log.csv`; it will also dump current state into `state.csv`.
-  * `--logfile` appends status to file other than the default `log.csv`
-  * `--statefile` overwrites status to file other than the default `state.csv`
-  * `--pollinginterval` in seconds: how frequently to poll the controller for data, defaults to 10
-  * `--help`, `-h` prints this help
-  * Required parameter: the serial device name to listen on
-
-TODO:
 
 * finalize the format of the CSV
 * Use kotlinx-datetime to format date+time
