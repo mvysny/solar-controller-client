@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     kotlin("multiplatform") version "1.7.10"
+    kotlin("plugin.serialization") version "1.7.10"
 }
 
 group = "me.mavi"
@@ -38,7 +39,11 @@ kotlin {
         }
     }
     sourceSets {
-        val nativeMain by getting
+        val nativeMain by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
+            }
+        }
         val nativeTest by getting
     }
 }

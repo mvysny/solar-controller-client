@@ -2,6 +2,8 @@
 
 import crc.CRC16Modbus
 import crc.crcOf
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
     init {
@@ -153,6 +155,14 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
         return RenogyStatus(streetLightOn, streetLightBrightness, chargingState, faults)
     }
 
+    fun getAllData(cachedSystemInfo: SystemInfo? = null): RenogyData = RenogyData(
+        cachedSystemInfo ?: getSystemInfo(),
+        getPowerStatus(),
+        getDailyStats(),
+        getHistoricalData(),
+        getStatus()
+    )
+
     companion object {
         private val COMMAND_READ_REGISTER: Byte = 0x03
     }
@@ -164,6 +174,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
  * @param chargingState charging state (if known)
  * @param faults current faults, empty if none.
  */
+@Serializable
 data class RenogyStatus(
     val streetLightOn: Boolean,
     val streetLightBrightness: UByte,
@@ -228,6 +239,7 @@ enum class ControllerFaults(val bit: Int) {
  * @param cumulativePowerGenerationWH cumulative power generation in WH
  * @param cumulativePowerConsumptionWH cumulative power consumption in WH
  */
+@Serializable
 data class HistoricalData(
     val daysUp: UShort,
     val batteryOverDischargeCount: UShort,
@@ -249,8 +261,9 @@ data class HistoricalData(
  * @param chargingAmpHours Charging amp-hrs of the current day, AH
  * @param dischargingAmpHours Discharging amp-hrs of the current day, AH
  * @param powerGeneration Power generation of the current day, WH
- * @param powerConsumption Power generation of the current day, WH
+ * @param powerConsumption Power consumption of the current day, WH
  */
+@Serializable
 data class DailyStats(
     val batteryMinVoltage: Float,
     val batteryMaxVoltage: Float,
@@ -281,6 +294,7 @@ data class DailyStats(
  * @param solarPanelCurrent Solar panel current (to controller), in A
  * @param solarPanelPower charging power, in W
  */
+@Serializable
 data class PowerStatus(
     val batterySOC: UShort,
     val batteryVoltage: Float,
@@ -311,6 +325,7 @@ data class PowerStatus(
  * @property serialNumber serial number, 4 bytes formatted as a hex string, e.g. `1501FFFF`,
  * indicating it's the 65535th (hexadecimal FFFFH) unit produced in Jan. of 2015.
  */
+@Serializable
 data class SystemInfo(
     val maxVoltage: Int,
     val ratedChargingCurrent: Int,
@@ -351,4 +366,18 @@ class RenogyException(message: String, val code: Byte? = null) : Exception(messa
             return RenogyException("0x${code.toHex()}: $message", code)
         }
     }
+}
+
+/**
+ * Contains all data which can be pulled from the Renogy device.
+ */
+@Serializable
+data class RenogyData(
+    val systemInfo: SystemInfo,
+    val powerStatus: PowerStatus,
+    val dailyStats: DailyStats,
+    val historicalData: HistoricalData,
+    val status: RenogyStatus
+) {
+    fun toJson(prettyPrint: Boolean = true): String = toJson(serializer(), this, prettyPrint)
 }

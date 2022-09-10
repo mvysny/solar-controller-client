@@ -56,12 +56,70 @@ $ solar-controller-client.kexe /dev/ttyUSB0
 
 At the moment the app will only print status and quit. Development is ongoing.
 
+The status JSON example:
+```json
+{
+    "systemInfo": {
+        "maxVoltage": 24,
+        "ratedChargingCurrent": 40,
+        "ratedDischargingCurrent": 40,
+        "productType": "Controller",
+        "productModel": "RENOGY ROVER",
+        "softwareVersion": "v1.2.3",
+        "hardwareVersion": "v4.5.6",
+        "serialNumber": "1501FFFF"
+    },
+    "powerStatus": {
+        "batterySOC": 100,
+        "batteryVoltage": 25.6,
+        "chargingCurrentToBattery": 2.3,
+        "batteryTemp": 23,
+        "controllerTemp": 23,
+        "loadVoltage": 0.0,
+        "loadCurrent": 0.0,
+        "loadPower": 0,
+        "solarPanelVoltage": 60.2,
+        "solarPanelCurrent": 4.2,
+        "solarPanelPower": 252
+    },
+    "dailyStats": {
+        "batteryMinVoltage": 25.0,
+        "batteryMaxVoltage": 28.0,
+        "maxChargingCurrent": 10.0,
+        "maxDischargingCurrent": 10.0,
+        "maxChargingPower": 240,
+        "maxDischargingPower": 240,
+        "chargingAmpHours": 100,
+        "dischargingAmpHours": 100,
+        "powerGeneration": 0.0,
+        "powerConsumption": 0.0
+    },
+    "historicalData": {
+        "daysUp": 20,
+        "batteryOverDischargeCount": 1,
+        "batteryFullChargeCount": 20,
+        "totalChargingBatteryAH": 2000,
+        "totalDischargingBatteryAH": 2000,
+        "cumulativePowerGenerationWH": 2000.0,
+        "cumulativePowerConsumptionWH": 2000.0
+    },
+    "status": {
+        "streetLightOn": false,
+        "streetLightBrightness": 0,
+        "chargingState": "MpptChargingMode",
+        "faults": [
+            "ControllerTemperatureTooHigh"
+        ]
+    }
+}
+```
+
 # Further development
 
 Tasks to do:
 
 * Add command-line parameters:
-  * `--status` will simply print status and quit
+  * `--status` will simply print the Renogy Rover status as JSON to stdout and quit
   * default mode will periodically watch controller and add rows to `log.csv`; it will also dump current state into `state.csv`.
   * `--logfile` appends status to file other than the default `log.csv`
   * `--statefile` overwrites status to file other than the default `state.csv`
@@ -72,7 +130,6 @@ Tasks to do:
 TODO:
 
 * finalize the format of the CSV
-* mimic JSON from https://github.com/mickwheelz/NodeRenogy
 * Use kotlinx-datetime to format date+time
 * Respond to signals and CTRL+C and terminate cleanly, closing the pipe
 * Also optionally dump a HTML file which can be served over nginx
