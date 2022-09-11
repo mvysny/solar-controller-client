@@ -105,14 +105,14 @@ inline fun ByteArray.getUIntHiLoAt(index: Int): UInt {
     return result
 }
 
-private val STDERR = platform.posix.fdopen(2, "w")
+private val STDERR = fdopen(2, "w")
 
 /**
  * Prints [message] to utils.STDERR.
  */
 fun eprintln(message: String) {
-    platform.posix.fprintf(STDERR, "%s\n", message)
-    platform.posix.fflush(STDERR)
+    fprintf(STDERR, "%s\n", message)
+    fflush(STDERR)
 }
 
 /**
