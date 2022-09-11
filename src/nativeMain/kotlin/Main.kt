@@ -1,6 +1,9 @@
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
+import utils.SerialPort
 import utils.repeatEvery
+import utils.use
+import utils.writeToFile
 
 fun main(args: Array<String>) {
     val parser = ArgParser("solar-controller-client")

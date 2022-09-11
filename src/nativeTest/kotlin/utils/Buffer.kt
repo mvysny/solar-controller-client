@@ -1,4 +1,5 @@
-import utils.toHex
+package utils
+
 import kotlin.test.expect
 
 /**
@@ -28,7 +29,7 @@ class Buffer : IO {
     }
 
     override fun toString(): String =
-        "Buffer(written=${writtenBytes.toByteArray().toHex()}, toReturn=${toReturn.toByteArray().toHex()}, readPointer=$readPointer)"
+        "utils.Buffer(written=${writtenBytes.toByteArray().toHex()}, toReturn=${toReturn.toByteArray().toHex()}, readPointer=$readPointer)"
 
     fun expectWrittenBytes(hexBytes: String) {
         expect(hexBytes) { writtenBytes.toByteArray().toHex() }
