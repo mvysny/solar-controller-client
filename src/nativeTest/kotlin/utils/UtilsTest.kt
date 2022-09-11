@@ -18,6 +18,34 @@ class UtilsTest {
     }
 
     @Test
+    fun testHibyte() {
+        expect(0.toByte()) { 0.toUShort().hibyte }
+        expect(0.toByte()) { 1.toUShort().hibyte }
+        expect(0.toByte()) { 0x80.toUShort().hibyte }
+        expect(0.toByte()) { 0xFF.toUShort().hibyte }
+        expect(1.toByte()) { 0x100.toUShort().hibyte }
+        expect(1.toByte()) { 0x180.toUShort().hibyte }
+        expect(0x80.toByte()) { 0x8000.toUShort().hibyte }
+        expect(0x80.toByte()) { 0x8080.toUShort().hibyte }
+        expect(0x80.toByte()) { 0x80FF.toUShort().hibyte }
+        expect(0xFF.toByte()) { 0xFFFF.toUShort().hibyte }
+    }
+
+    @Test
+    fun testLobyte() {
+        expect(0.toByte()) { 0.toUShort().lobyte }
+        expect(1.toByte()) { 1.toUShort().lobyte }
+        expect(0x80.toByte()) { 0x80.toUShort().lobyte }
+        expect(0xff.toByte()) { 0xFF.toUShort().lobyte }
+        expect(0.toByte()) { 0x100.toUShort().lobyte }
+        expect(0x80.toByte()) { 0x180.toUShort().lobyte }
+        expect(0.toByte()) { 0x8000.toUShort().lobyte }
+        expect(0x80.toByte()) { 0x8080.toUShort().lobyte }
+        expect(0xff.toByte()) { 0x80FF.toUShort().lobyte }
+        expect(0xFF.toByte()) { 0xFFFF.toUShort().lobyte }
+    }
+
+    @Test
     fun testGetUShortHiLoAt() {
         var bytes = byteArrayOf(0, 1, 2, 3, 4)
         expect(1.toUShort()) { bytes.getUShortHiLoAt(0) }
@@ -26,7 +54,6 @@ class UtilsTest {
         expect(0xFFFE.toUShort()) { bytes.getUShortHiLoAt(0) }
         expect(0xFEFD.toUShort()) { bytes.getUShortHiLoAt(1) }
     }
-
 
     @Test
     fun testGetUIntHiLoAt() {
