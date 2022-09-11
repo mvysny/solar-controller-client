@@ -1,5 +1,6 @@
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
+import utils.repeatEvery
 
 fun main(args: Array<String>) {
     val parser = ArgParser("solar-controller-client")

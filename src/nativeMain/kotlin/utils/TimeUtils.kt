@@ -1,3 +1,5 @@
+package utils
+
 import kotlinx.cinterop.cValue
 import kotlinx.cinterop.staticCFunction
 import platform.posix.*

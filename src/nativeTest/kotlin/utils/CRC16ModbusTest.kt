@@ -1,4 +1,4 @@
-package crc
+package utils
 
 import kotlin.test.Test
 import kotlin.test.expect

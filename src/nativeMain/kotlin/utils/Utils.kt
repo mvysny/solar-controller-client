@@ -1,3 +1,7 @@
+package utils
+
+import FileNotFoundException
+import IOException
 import kotlinx.cinterop.*
 import platform.posix.*
 
@@ -104,7 +108,7 @@ inline fun ByteArray.getUIntHiLoAt(index: Int): UInt {
 private val STDERR = platform.posix.fdopen(2, "w")
 
 /**
- * Prints [message] to STDERR.
+ * Prints [message] to utils.STDERR.
  */
 fun eprintln(message: String) {
     platform.posix.fprintf(STDERR, "%s\n", message)

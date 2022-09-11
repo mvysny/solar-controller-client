@@ -1,5 +1,6 @@
 import kotlinx.cinterop.*
 import platform.posix.*
+import utils.*
 
 interface Closeable {
     /**

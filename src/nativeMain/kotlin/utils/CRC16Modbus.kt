@@ -1,4 +1,4 @@
-package crc
+package utils
 
 // copyright https://github.com/fbiego/CRC16Modbus/blob/main/CRC16Modbus.kt
 class CRC16Modbus {

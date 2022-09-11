@@ -1,3 +1,5 @@
+package utils
+
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.json.Json
 

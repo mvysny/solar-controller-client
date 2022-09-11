@@ -1,3 +1,4 @@
+import utils.toHex
 import kotlin.test.Test
 import kotlin.test.expect
 import kotlin.test.fail

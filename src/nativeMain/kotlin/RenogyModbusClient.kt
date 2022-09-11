@@ -1,9 +1,7 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 
-import crc.CRC16Modbus
-import crc.crcOf
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
+import utils.*
 
 class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) {
     init {
@@ -379,5 +377,6 @@ data class RenogyData(
     val historicalData: HistoricalData,
     val status: RenogyStatus
 ) {
-    fun toJson(prettyPrint: Boolean = true): String = toJson(serializer(), this, prettyPrint)
+    fun toJson(prettyPrint: Boolean = true): String =
+        utils.toJson(serializer(), this, prettyPrint)
 }
