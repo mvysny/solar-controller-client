@@ -78,13 +78,13 @@ open class IOFile(val fname: String, oflag: Int = O_RDWR, mode: Int = 0) : IO, C
     init {
         require(fname.isNotBlank()) { "fname is blank" }
     }
-    protected val fd: Int = checkNonNegative("open $fname") { open(fname, oflag, mode) }
+    protected val fd: Int = checkNativeNonNegative("open $fname") { open(fname, oflag, mode) }
 
     override fun write(bytes: ByteArray) {
         var current = 0
         while (current < bytes.size) {
             bytes.usePinned { pinned ->
-                val bytesWritten: Long = checkNonNegativeLong("write") {
+                val bytesWritten: Long = checkNativeNonNegativeLong("write") {
                     write(fd, pinned.addressOf(current), (bytes.size - current).toULong())
                 }
                 current += bytesWritten.toInt()
@@ -96,7 +96,7 @@ open class IOFile(val fname: String, oflag: Int = O_RDWR, mode: Int = 0) : IO, C
         var current = 0
         while (current < bytes.size) {
             bytes.usePinned { pinned ->
-                val bytesRead: Long = checkNonNegativeLong("read") {
+                val bytesRead: Long = checkNativeNonNegativeLong("read") {
                     read(fd, pinned.addressOf(current), (bytes.size - current).toULong())
                 }
                 current += bytesRead.toInt()
@@ -108,7 +108,7 @@ open class IOFile(val fname: String, oflag: Int = O_RDWR, mode: Int = 0) : IO, C
     }
 
     override fun close() {
-        checkZero("close") { close(fd) }
+        checkNativeZero("close") { close(fd) }
     }
 
     override fun toString(): String = "IOFile('$fname')"
@@ -129,7 +129,7 @@ class SerialPort(fname: String) : IOFile(fname) {
         // taken from https://blog.mbedded.ninja/programming/operating-systems/linux/linux-serial-ports-using-c-cpp/#reading-and-writing
         memScoped {
             val tty: termios = alloc<termios>()
-            checkZero("tcgetattr (get serial port configuration) for $fname") { tcgetattr(fd, tty.ptr) }
+            checkNativeZero("tcgetattr (get serial port configuration) for $fname") { tcgetattr(fd, tty.ptr) }
 
             tty.c_cflag = tty.c_cflag.remove(PARENB) // Clear parity bit, disabling parity (most common)
             tty.c_cflag = tty.c_cflag.remove(CSTOPB) // Clear stop field, only one stop bit used in communication (most common)
@@ -155,10 +155,10 @@ class SerialPort(fname: String) : IOFile(fname) {
             tty.c_cc[VMIN] = 1.toUByte()  // block endlessly until at least 1 byte is read.
 
             // Set in/out baud rate to be 9600
-            checkZero("cfsetispeed") { cfsetispeed(tty.ptr, baud.toUInt()) }
-            checkZero("cfsetospeed") { cfsetospeed(tty.ptr, baud.toUInt()) }
+            checkNativeZero("cfsetispeed") { cfsetispeed(tty.ptr, baud.toUInt()) }
+            checkNativeZero("cfsetospeed") { cfsetospeed(tty.ptr, baud.toUInt()) }
 
-            checkZero("tcsetattr (set serial port configuration) for $fname") { tcsetattr(fd, TCSANOW, tty.ptr) }
+            checkNativeZero("tcsetattr (set serial port configuration) for $fname") { tcsetattr(fd, TCSANOW, tty.ptr) }
         }
     }
 

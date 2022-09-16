@@ -2,6 +2,8 @@ package utils
 
 import kotlinx.cinterop.*
 import platform.posix.*
+import kotlin.random.Random
+import kotlin.random.nextUInt
 
 fun <R: Comparable<R>> checkNative(op: String, range: ClosedRange<R>, call: () -> R): R {
     val result: R = call()
@@ -9,6 +11,10 @@ fun <R: Comparable<R>> checkNative(op: String, range: ClosedRange<R>, call: () -
         iofail(op)
     }
     return result
+}
+
+fun <R: CPointed> checkNativeNotNull(op: String, call: () -> CPointer<R>?): CPointer<R> {
+    return call() ?: iofail(op)
 }
 
 /**
@@ -27,12 +33,12 @@ fun iofail(op: String): Nothing {
 /**
  * Checks that [operation] [call] ended with a zero result.
  */
-fun checkZero(operation: String, call: () -> Int): Int =
+fun checkNativeZero(operation: String, call: () -> Int): Int =
     checkNative(operation, 0..0, call)
 
-fun checkNonNegative(op: String, call: () -> Int): Int =
+fun checkNativeNonNegative(op: String, call: () -> Int): Int =
     checkNative(op, 0..Int.MAX_VALUE, call)
-fun checkNonNegativeLong(op: String, call: () -> Long): Long =
+fun checkNativeNonNegativeLong(op: String, call: () -> Long): Long =
     checkNative(op, 0L..Long.MAX_VALUE, call)
 
 /**
@@ -112,3 +118,9 @@ fun eprintln(message: String) {
     fprintf(STDERR, "%s\n", message)
     fflush(STDERR)
 }
+
+fun Random.nextFloat(from: Float, to: Float): Float =
+    nextDouble(from.toDouble(), to.toDouble()).toFloat()
+
+fun Random.nextUShort(from: UShort, to: UShort): UShort =
+    nextUInt(from.toUInt(), to.toUInt()).toUShort()

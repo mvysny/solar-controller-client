@@ -61,7 +61,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
     /**
      * Retrieves the [SystemInfo] from the device.
      */
-    fun getSystemInfo(): SystemInfo {
+    override fun getSystemInfo(): SystemInfo {
         var result = readRegister(0x0A.toUShort(), 4.toUShort())
         val maxVoltage = result[0].toInt()
         val ratedChargingCurrent = result[1].toInt()
