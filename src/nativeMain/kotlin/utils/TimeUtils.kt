@@ -6,6 +6,8 @@ import kotlinx.cinterop.pointed
 import kotlinx.cinterop.staticCFunction
 import platform.posix.*
 import kotlin.system.getTimeMillis
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 private fun setupSignal(signal: Int) {
     if (signal(signal, staticCFunction<Int, Unit> {}) == SIG_ERR) {
@@ -142,5 +144,23 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
             val time = LocalTime(tm.tm_hour, tm.tm_min, tm.tm_sec)
             return LocalDateTime(date, time)
         }
+    }
+}
+
+/**
+ * An instant in time. Only delta between two subsequent instants makes sense.
+ * @property millis current system time in milliseconds since certain moment in the past,
+ * only delta between two instants makes sense.
+*/
+value class Instant private constructor(private val millis: Long) : Comparable<Instant> {
+    override fun compareTo(other: Instant): Int = this.millis.compareTo(other.millis)
+
+    /**
+     * Returns the number of milliseconds between two instants.
+     */
+    operator fun minus(other: Instant): Duration = (millis - other.millis).milliseconds
+
+    companion object {
+        fun now(): Instant = Instant(getTimeMillis())
     }
 }
