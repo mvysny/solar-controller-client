@@ -5,7 +5,7 @@ import platform.posix.*
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
-fun <R: Comparable<R>> checkNative(op: String, range: ClosedRange<R>, call: () -> R): R {
+inline fun <R: Comparable<R>> checkNative(op: String, range: ClosedRange<R>, call: () -> R): R {
     val result: R = call()
     if (result !in range) {
         iofail(op)
@@ -13,7 +13,7 @@ fun <R: Comparable<R>> checkNative(op: String, range: ClosedRange<R>, call: () -
     return result
 }
 
-fun <R: CPointed> checkNativeNotNull(op: String, call: () -> CPointer<R>?): CPointer<R> {
+inline fun <R: CPointed> checkNativeNotNull(op: String, call: () -> CPointer<R>?): CPointer<R> {
     return call() ?: iofail(op)
 }
 
@@ -33,12 +33,12 @@ fun iofail(op: String): Nothing {
 /**
  * Checks that [operation] [call] ended with a zero result.
  */
-fun checkNativeZero(operation: String, call: () -> Int): Int =
+inline fun checkNativeZero(operation: String, call: () -> Int): Int =
     checkNative(operation, 0..0, call)
 
-fun checkNativeNonNegative(op: String, call: () -> Int): Int =
+inline fun checkNativeNonNegative(op: String, call: () -> Int): Int =
     checkNative(op, 0..Int.MAX_VALUE, call)
-fun checkNativeNonNegativeLong(op: String, call: () -> Long): Long =
+inline fun checkNativeNonNegativeLong(op: String, call: () -> Long): Long =
     checkNative(op, 0L..Long.MAX_VALUE, call)
 
 /**
