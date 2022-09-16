@@ -81,11 +81,6 @@ fun repeatEvery(millis: Long, block: () -> Boolean) {
 }
 
 /**
- * Returns the current date and time, in the format of 2022-09-11 00:14:45
- */
-fun getLocalDateTime(): String = LocalDateTime.now().format()
-
-/**
  * @property year e.g. 2022
  * @property month 1..12
  * @property day 1..31
