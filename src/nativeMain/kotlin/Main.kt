@@ -16,7 +16,7 @@ fun main(args: Array<String>) {
 
     SerialPort(device).use { serialPort ->
         serialPort.configure()
-        val client = RenogyModbusClient(serialPort)
+        val client: RenogyClient = RenogyModbusClient(serialPort)
 
         if (status == true) {
             val allData: RenogyData = client.getAllData()

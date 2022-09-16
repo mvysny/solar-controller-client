@@ -3,6 +3,11 @@ import utils.toHex
 
 interface RenogyClient {
     /**
+     * Retrieves the [SystemInfo] from the device.
+     */
+    fun getSystemInfo(): SystemInfo
+
+    /**
      * Retrieves all current data from a Renogy device. Usually [SystemInfo] is only
      * fetched once and then cached; it can be passed in as [cachedSystemInfo]
      * to avoid repeated retrieval.
