@@ -103,6 +103,11 @@ data class LocalDate(val year: Int, val month: Int, val day: Int) : Comparable<L
     }
 }
 
+/**
+ * @property hour 0..23
+ * @property minute 0..59
+ * @property second 0..61
+ */
 data class LocalTime(val hour: Int, val minute: Int, val second: Int) : Comparable<LocalTime> {
     init {
         require(hour in 0..23) { "hour: expected 0..23 but was $hour" }
@@ -119,6 +124,8 @@ data class LocalTime(val hour: Int, val minute: Int, val second: Int) : Comparab
 
     companion object {
         fun now(): LocalTime = LocalDateTime.now().time
+        val MIDNIGHT = LocalTime(0, 0, 0)
+        val MIN = MIDNIGHT
     }
 }
 
@@ -132,9 +139,9 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
     companion object {
         fun now(): LocalDateTime {
             // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC).
-            val t = checkNativeNonNegativeLong("time") { time(null) }
+            val t: Long = checkNativeNonNegativeLong("time") { time(null) }
             // localtime() returns a pointer to static data and hence is not thread-safe.
-            val tm = checkNativeNotNull("localtime") { localtime(cValuesOf(t)) } .pointed
+            val tm: tm = checkNativeNotNull("localtime") { localtime(cValuesOf(t)) } .pointed
             val date = LocalDate(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday)
             val time = LocalTime(tm.tm_hour, tm.tm_min, tm.tm_sec)
             return LocalDateTime(date, time)
