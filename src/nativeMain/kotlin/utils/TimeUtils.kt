@@ -81,10 +81,66 @@ fun repeatEvery(millis: Long, block: () -> Boolean) {
 /**
  * Returns the current date and time, in the format of 2022-09-11 00:14:45
  */
-fun getLocalDateTime(): String {
-    val t = checkNonNegativeLong("time") { time(null) }
-    val tm = localtime(cValuesOf(t))!!.pointed
-    val yyyymmdd = "${tm.tm_year + 1900}-${(tm.tm_mon + 1).toString().padStart(2, '0')}-${tm.tm_mday.toString().padStart(2, '0')}"
-    val hhmmss = "${tm.tm_hour.toString().padStart(2, '0')}:${tm.tm_min.toString().padStart(2, '0')}:${tm.tm_sec.toString().padStart(2, '0')}"
-    return "$yyyymmdd $hhmmss"
+fun getLocalDateTime(): String = LocalDateTime.now().format()
+
+/**
+ * @property year e.g. 2022
+ * @property month 1..12
+ * @property day 1..31
+ */
+data class LocalDate(val year: Int, val month: Int, val day: Int) : Comparable<LocalDate> {
+    init {
+        require(month in 1..12) { "month: expected 1..12 but was $month" }
+        require(day in 1..31) { "day: expected 1..31 but was $day" }
+    }
+    private val ymd: Long get() = ((year.toLong() * 12) + month) * 31 + day
+    override fun compareTo(other: LocalDate): Int = ymd.compareTo(other.ymd)
+
+    /**
+     * Formats the date in yyyy-MM-dd
+     */
+    fun format(): String = "$year-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
+
+    companion object {
+        fun today(): LocalDate = LocalDateTime.now().date
+    }
+}
+
+data class LocalTime(val hour: Int, val minute: Int, val second: Int) : Comparable<LocalTime> {
+    init {
+        require(hour in 0..23) { "hour: expected 0..23 but was $hour" }
+        require(minute in 0..59) { "minute: expected 0..59 but was $minute" }
+        require(second in 0..61) { "second: expected 0..61 but was $second" }
+    }
+    val secondsSinceMidnight: Int get() = ((hour * 60) + minute) * 60 + second
+    override fun compareTo(other: LocalTime): Int = secondsSinceMidnight.compareTo(other.secondsSinceMidnight)
+
+    /**
+     * Formats the date+time in the form of `HH:mm:ss`.
+     */
+    fun format(): String = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}"
+
+    companion object {
+        fun now(): LocalTime = LocalDateTime.now().time
+    }
+}
+
+data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<LocalDateTime> {
+    override fun compareTo(other: LocalDateTime): Int = compareValuesBy(this, other, { it.date }, { it.time })
+
+    /**
+     * Formats the date+time in the form of `yyyy-MM-dd HH:mm:ss`.
+     */
+    fun format(): String = "${date.format()} ${time.format()}"
+    companion object {
+        fun now(): LocalDateTime {
+            // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC).
+            val t = checkNativeNonNegativeLong("time") { time(null) }
+            // localtime() returns a pointer to static data and hence is not thread-safe.
+            val tm = checkNativeNotNull("localtime") { localtime(cValuesOf(t)) } .pointed
+            val date = LocalDate(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday)
+            val time = LocalTime(tm.tm_hour, tm.tm_min, tm.tm_sec)
+            return LocalDateTime(date, time)
+        }
+    }
 }
