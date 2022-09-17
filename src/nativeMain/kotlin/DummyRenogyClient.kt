@@ -83,7 +83,7 @@ class DummyRenogyClient : RenogyClient {
         val dummyDailyStats = getDailyStats()
         val dummyHistoricalData = getHistoricalData()
         val dummyStatus = RenogyStatus(false, 0.toUByte(), ChargingState.MpptChargingMode, setOf(ControllerFaults.ControllerTemperatureTooHigh))
-        val dummyRenogyData = RenogyData(systemInfo, dummyPowerStatus, dummyDailyStats, dummyHistoricalData, dummyStatus)
+        val dummyRenogyData = RenogyData(now, systemInfo, dummyPowerStatus, dummyDailyStats, dummyHistoricalData, dummyStatus)
         return dummyRenogyData
     }
 

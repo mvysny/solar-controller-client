@@ -1,5 +1,6 @@
 import RenogyException.Companion.fromCode
 import kotlinx.serialization.Serializable
+import utils.LocalDateTime
 import utils.toHex
 
 interface RenogyClient {
@@ -223,6 +224,7 @@ class RenogyException(message: String, val code: Byte? = null) : Exception(messa
  */
 @Serializable
 data class RenogyData(
+    val capturedAt: LocalDateTime,
     val systemInfo: SystemInfo,
     val powerStatus: PowerStatus,
     val dailyStats: DailyStats,

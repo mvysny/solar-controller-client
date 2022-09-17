@@ -203,7 +203,7 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
     }
 }
 
-private object LocalTimeSerializer : KSerializer<LocalTime> {
+object LocalTimeSerializer : KSerializer<LocalTime> {
     override val descriptor: SerialDescriptor
         get() = PrimitiveSerialDescriptor("LocalTime", PrimitiveKind.STRING)
 
@@ -214,7 +214,7 @@ private object LocalTimeSerializer : KSerializer<LocalTime> {
     }
 }
 
-private object LocalDateSerializer : KSerializer<LocalDate> {
+object LocalDateSerializer : KSerializer<LocalDate> {
     override val descriptor: SerialDescriptor
         get() = PrimitiveSerialDescriptor("LocalDate", PrimitiveKind.STRING)
 
@@ -225,7 +225,7 @@ private object LocalDateSerializer : KSerializer<LocalDate> {
     }
 }
 
-private object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
+object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     override val descriptor: SerialDescriptor
         get() = PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.STRING)
 

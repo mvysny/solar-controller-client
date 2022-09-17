@@ -153,6 +153,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
     }
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData = RenogyData(
+        LocalDateTime.now(),
         cachedSystemInfo ?: getSystemInfo(),
         getPowerStatus(),
         getDailyStats(),
