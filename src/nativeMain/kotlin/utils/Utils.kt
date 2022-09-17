@@ -2,6 +2,7 @@ package utils
 
 import kotlinx.cinterop.*
 import platform.posix.*
+import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
@@ -124,3 +125,8 @@ fun Random.nextFloat(from: Float, to: Float): Float =
 
 fun Random.nextUShort(from: UShort, to: UShort): UShort =
     nextUInt(from.toUInt(), to.toUInt()).toUShort()
+
+fun Float.toString2Decimals(): String {
+    val string = (this * 100f).roundToInt().toString().padStart(3, '0')
+    return "${string.dropLast(2)}.${string.takeLast(2)}"
+}

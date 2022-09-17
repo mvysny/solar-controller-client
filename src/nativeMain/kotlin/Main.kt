@@ -54,9 +54,19 @@ private fun File.appendCSV(data: RenogyData) {
                 "ControllerTemp",
                 "SolarPanelVoltage",
                 "SolarPanelCurrent",
-                "SolarPanelPower"
+                "SolarPanelPower",
+                "Daily.BatteryMinVoltage",
+                "Daily.BatteryMaxVoltage",
+                "Daily.MaxChargingCurrent",
+                "Daily.MaxChargingPower",
+                "Daily.ChargingAmpHours",
+                "Daily.PowerGeneration",
+                "Stats.DaysUp",
+                "Stats.BatteryOverDischargeCount",
+                "Stats.BatteryFullChargeCount",
+                "Stats.TotalChargingBatteryAH",
+                "Stats.CumulativePowerGenerationWH"
             )
-            // @todo more CSV data
         }
         csv.writeLine(
             data.capturedAt.format(),
@@ -67,7 +77,18 @@ private fun File.appendCSV(data: RenogyData) {
             data.powerStatus.controllerTemp,
             data.powerStatus.solarPanelVoltage,
             data.powerStatus.solarPanelCurrent,
-            data.powerStatus.solarPanelPower
+            data.powerStatus.solarPanelPower,
+            data.dailyStats.batteryMinVoltage,
+            data.dailyStats.batteryMaxVoltage,
+            data.dailyStats.maxChargingCurrent,
+            data.dailyStats.maxChargingPower,
+            data.dailyStats.chargingAmpHours,
+            data.dailyStats.powerGeneration,
+            data.historicalData.daysUp,
+            data.historicalData.batteryOverDischargeCount,
+            data.historicalData.batteryFullChargeCount,
+            data.historicalData.totalChargingBatteryAH,
+            data.historicalData.cumulativePowerGenerationWH
         )
     }
 }
