@@ -1,3 +1,4 @@
+import RenogyException.Companion.fromCode
 import kotlinx.serialization.Serializable
 import utils.toHex
 
