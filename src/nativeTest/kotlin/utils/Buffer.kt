@@ -28,6 +28,8 @@ class Buffer : IO {
         }
     }
 
+    override fun close() {}
+
     override fun toString(): String =
         "utils.Buffer(written=${writtenBytes.toByteArray().toHex()}, toReturn=${toReturn.toByteArray().toHex()}, readPointer=$readPointer)"
 

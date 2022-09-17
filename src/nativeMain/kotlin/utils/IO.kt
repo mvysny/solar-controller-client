@@ -35,7 +35,7 @@ fun <C: Closeable, R> C.use(block: (C) -> R): R {
 /**
  * An IO pipe supporting most basic operations.
  */
-interface IO {
+interface IO : Closeable {
     /**
      * Writes all [bytes] to the underlying IO. Blocks until the bytes are written.
      * Does nothing if the array is empty.
@@ -79,9 +79,9 @@ data class File(val pathname: String) {
     init {
         require(pathname.isNotBlank()) { "pathname is blank" }
     }
-    fun openAppend(mode: Int = rwrwr): IOFile = IOFile(this, O_WRONLY or O_APPEND or O_CREAT, mode)
-    fun openOverwrite(mode: Int = rwrwr): IOFile = IOFile(this, O_WRONLY or O_TRUNC or O_CREAT, mode)
-    fun openRead(): IOFile = IOFile(this, O_RDONLY)
+    fun openAppend(mode: Int = rwrwr): IO = IOFile(this, O_WRONLY or O_APPEND or O_CREAT, mode)
+    fun openOverwrite(mode: Int = rwrwr): IO = IOFile(this, O_WRONLY or O_TRUNC or O_CREAT, mode)
+    fun openRead(): IO = IOFile(this, O_RDONLY)
     fun writeContents(contents: String) {
         openOverwrite().use { file -> file.write(contents.encodeToByteArray()) }
     }
