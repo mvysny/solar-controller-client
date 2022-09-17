@@ -161,7 +161,7 @@ data class LocalTime(val hour: Int, val minute: Int, val second: Int) : Comparab
     }
 }
 
-@Serializable
+@Serializable(with = LocalDateTimeSerializer::class)
 data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<LocalDateTime> {
     override fun compareTo(other: LocalDateTime): Int = compareValuesBy(this, other, { it.date }, { it.time })
 
@@ -181,6 +181,23 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
 
             val date = LocalDate(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday)
             val time = LocalTime(tm.tm_hour, tm.tm_min, tm.tm_sec)
+            return LocalDateTime(date, time)
+        }
+
+        private val FORMAT_PATTERN = Regex("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) (\\d\\d):(\\d\\d):(\\d\\d)")
+        /**
+         * Parses the value produced by [format].
+         * @param formatted in the form of `HH:mm:ss`.
+         */
+        fun parse(formatted: String): LocalDateTime {
+            val result = FORMAT_PATTERN.matchEntire(formatted)
+            requireNotNull(result) { "parsed string must be in the format of HH:mm:ss but got $formatted" }
+            val date = LocalDate(
+                result.groupValues[1].toInt(),
+                result.groupValues[2].toInt(),
+                result.groupValues[3].toInt()
+            )
+            val time = LocalTime(result.groupValues[4].toInt(), result.groupValues[5].toInt(), result.groupValues[6].toInt())
             return LocalDateTime(date, time)
         }
     }
@@ -204,6 +221,17 @@ private object LocalDateSerializer : KSerializer<LocalDate> {
     override fun deserialize(decoder: Decoder): LocalDate = LocalDate.parse(decoder.decodeString())
 
     override fun serialize(encoder: Encoder, value: LocalDate) {
+        encoder.encodeString(value.format())
+    }
+}
+
+private object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): LocalDateTime = LocalDateTime.parse(decoder.decodeString())
+
+    override fun serialize(encoder: Encoder, value: LocalDateTime) {
         encoder.encodeString(value.format())
     }
 }

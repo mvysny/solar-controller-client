@@ -230,5 +230,5 @@ data class RenogyData(
     val status: RenogyStatus
 ) {
     fun toJson(prettyPrint: Boolean = true): String =
-        utils.toJson(serializer(), this, prettyPrint)
+        utils.toJson(this, prettyPrint)
 }

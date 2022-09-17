@@ -45,8 +45,24 @@ class LocalDateTest {
 
 class LocalDateTimeTest {
     @Test
-    fun localDateTimeNow() {
+    fun testNow() {
         LocalDateTime.now()
+    }
+
+    @Test
+    fun testFormat() {
+        expect("2022-01-01 01:23:45") { LocalDateTime(LocalDate(2022, 1, 1), LocalTime(1, 23, 45)).format() }
+    }
+
+    @Test
+    fun testParse() {
+        expect(LocalDateTime(LocalDate(2022, 1, 1), LocalTime(1, 23, 45))) { LocalDateTime.parse("2022-01-01 01:23:45") }
+    }
+
+    @Test
+    fun testFromToJson() {
+        expect(LocalDateTime(LocalDate(2022, 1, 1), LocalTime(1, 23, 45))) { Json.decodeFromString("\"2022-01-01 01:23:45\"") }
+        expect("\"2022-01-01 01:23:45\"") { Json.encodeToString(LocalDateTime(LocalDate(2022, 1, 1), LocalTime(1, 23, 45))) }
     }
 }
 
