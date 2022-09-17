@@ -51,11 +51,11 @@ class DummyRenogyClient : RenogyClient {
 
         // generate dummy power data flowing from the solar panels; calculate the rest of the values
         val solarPanelVoltage = Random.nextFloat(maxSolarPanelVoltage * 0.66f, maxSolarPanelVoltage)
-        val solarPanelCurrent = Random.nextFloat(maxSolarPanelAmperage / 2, maxSolarPanelAmperage)
-        // this is the most important value: this is the power (in Watts) the solar array is producing at this moment.
-        var solarPanelPowerW = solarPanelVoltage * solarPanelCurrent
+        var solarPanelCurrent = Random.nextFloat(maxSolarPanelAmperage / 2, maxSolarPanelAmperage)
         // adjust the generated power according to the hour-of-day, so that we won't generate 100% power at midnight :-D
-        solarPanelPowerW *= solarPanelGenerationPercentagePerHour[now.time.hour]
+        solarPanelCurrent *= solarPanelGenerationPercentagePerHour[now.time.hour]
+        // this is the most important value: this is the power (in Watts) the solar array is producing at this moment.
+        val solarPanelPowerW = solarPanelVoltage * solarPanelCurrent
 
         val batteryVoltage = Random.nextFloat(
             systemInfo.maxVoltage.toFloat(),
@@ -81,7 +81,7 @@ class DummyRenogyClient : RenogyClient {
 
         val dummyDailyStats = getDailyStats()
         val dummyHistoricalData = getHistoricalData()
-        val dummyStatus = RenogyStatus(false, 0.toUByte(), ChargingState.MpptChargingMode, setOf(ControllerFaults.ControllerTemperatureTooHigh))
+        val dummyStatus = RenogyStatus(false, 0.toUByte(), ChargingState.MpptChargingMode, setOf())
         val dummyRenogyData = RenogyData(now, systemInfo, dummyPowerStatus, dummyDailyStats, dummyHistoricalData, dummyStatus)
         return dummyRenogyData
     }
