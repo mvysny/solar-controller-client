@@ -88,6 +88,12 @@ data class File(val pathname: String) {
     fun appendContents(contents: String) {
         openAppend().use { file -> file.write(contents.encodeToByteArray()) }
     }
+    fun exists(): Boolean {
+        val result = access(pathname, F_OK)
+        if (result == 0) return true
+        if (errno == ENOENT) return false
+        iofail("access")
+    }
 }
 
 /**

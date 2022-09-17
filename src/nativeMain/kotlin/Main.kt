@@ -1,9 +1,9 @@
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
+import utils.File
 import utils.SerialPort
 import utils.repeatEvery
 import utils.use
-import utils.writeToFile
 
 fun main(args: Array<String>) {
     val parser = ArgParser("solar-controller-client")
@@ -14,7 +14,7 @@ fun main(args: Array<String>) {
     val pollingInterval by parser.option(ArgType.Int, fullName = "pollinginterval", shortName = "i", description = "in seconds: how frequently to poll the controller for data, defaults to 10")
     parser.parse(args)
 
-    SerialPort(device).use { serialPort ->
+    SerialPort(File(device)).use { serialPort ->
         serialPort.configure()
         val client: RenogyClient = RenogyModbusClient(serialPort)
 
@@ -25,7 +25,7 @@ fun main(args: Array<String>) {
             val systemInfo = client.getSystemInfo()
             repeatEvery((pollingInterval ?: 10) * 1000L) {
                 val allData: RenogyData = client.getAllData(systemInfo)
-                writeToFile(statefile ?: "status.json", allData.toJson())
+                File(statefile ?: "status.json").writeContents(allData.toJson())
                 // todo append to CSV
                 true
             }
