@@ -1,9 +1,6 @@
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
-import utils.File
-import utils.SerialPort
-import utils.repeatEvery
-import utils.use
+import utils.*
 
 fun main(args: Array<String>) {
     val parser = ArgParser("solar-controller-client")
@@ -26,9 +23,41 @@ fun main(args: Array<String>) {
             repeatEvery((pollingInterval ?: 10) * 1000L) {
                 val allData: RenogyData = client.getAllData(systemInfo)
                 File(statefile ?: "status.json").writeContents(allData.toJson())
-                // todo append to CSV
+                File(logfile ?: "log.csv").appendCSV(allData)
                 true
             }
         }
+    }
+}
+
+private fun File.appendCSV(data: RenogyData) {
+    val writeHeader = !exists()
+    openAppend().use { io ->
+        val csv = CSVWriter(io)
+        if (writeHeader) {
+            csv.writeHeader(
+                "DateTime",
+                "BatterySOC",
+                "BatteryVoltage",
+                "ChargingCurrentToBattery",
+                "BatteryTemp",
+                "ControllerTemp",
+                "SolarPanelVoltage",
+                "SolarPanelCurrent",
+                "SolarPanelPower"
+            )
+            // @todo more CSV data
+        }
+        csv.writeLine(
+            data.capturedAt.format(),
+            data.powerStatus.batterySOC,
+            data.powerStatus.batteryVoltage,
+            data.powerStatus.chargingCurrentToBattery,
+            data.powerStatus.batteryTemp,
+            data.powerStatus.controllerTemp,
+            data.powerStatus.solarPanelVoltage,
+            data.powerStatus.solarPanelCurrent,
+            data.powerStatus.solarPanelPower
+        )
     }
 }

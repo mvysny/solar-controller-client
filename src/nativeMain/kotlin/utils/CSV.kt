@@ -1,6 +1,6 @@
 package utils
 
-class CSVWriter(private val file: IOFile) {
+class CSVWriter(private val io: IO) {
     fun writeHeader(vararg header: String) {
         writeLine(header)
     }
@@ -12,6 +12,6 @@ class CSVWriter(private val file: IOFile) {
                 else -> "\"$it\""
             }
         }
-        file.writeln(row)
+        io.writeln(row)
     }
 }
