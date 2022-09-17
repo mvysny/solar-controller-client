@@ -122,8 +122,8 @@ data class DailyStats(
     val maxDischargingCurrent: Float,
     val maxChargingPower: UShort,
     val maxDischargingPower: UShort,
-    val chargingAmpHours: UShort,
-    val dischargingAmpHours: UShort,
+    val chargingAmpHours: Float,
+    val dischargingAmpHours: Float,
     val powerGeneration: Float,
     val powerConsumption: Float
 ) {

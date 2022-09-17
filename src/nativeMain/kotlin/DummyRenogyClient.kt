@@ -36,10 +36,9 @@ class DummyRenogyClient : RenogyClient {
     private var lastDailyStatsRetrievedAtDay: LocalDate? = null
     private var totalChargingBatteryAH: Float = 0f
     private var cumulativePowerGenerationWH: Float = 0f
+    private var lastDailyStats: DailyStats? = null
 
-    private fun getDailyStats(): DailyStats {
-        TODO("implement")
-    }
+    private fun getDailyStats(): DailyStats = lastDailyStats!!
 
     private fun getHistoricalData(): HistoricalData {
         val daysUp = (Instant.now() - poweredOnAt).inWholeDays + 1
@@ -78,7 +77,7 @@ class DummyRenogyClient : RenogyClient {
             solarPanelCurrent = solarPanelCurrent,
             solarPanelPower = solarPanelPowerW.toInt().toUShort())
 
-        updateStats(solarPanelPowerW, batteryVoltage)
+        updateStats(solarPanelPowerW, batteryVoltage, now.date)
 
         val dummyDailyStats = getDailyStats()
         val dummyHistoricalData = getHistoricalData()
@@ -92,14 +91,36 @@ class DummyRenogyClient : RenogyClient {
      * @param solarPanelPowerW solar array produces this amount of watts now.
      * @param batteryVoltage actual battery voltage.
      */
-    private fun updateStats(solarPanelPowerW: Float, batteryVoltage: Float) {
+    private fun updateStats(solarPanelPowerW: Float, batteryVoltage: Float, today: LocalDate) {
         val currentToBattery = solarPanelPowerW / batteryVoltage
         val now = Instant.now()
         val millisSinceLastMeasurement = now - lastDailyStatsRetrievedAt
-        val ampHoursToBatterySinceLastMeasurement: Float = currentToBattery * millisSinceLastMeasurement.inWholeMilliseconds / 1000f / 60f / 60f
+        val hoursSinceLastMeasurement = millisSinceLastMeasurement.inWholeMilliseconds / 1000f / 60f / 60f
+        val ampHoursToBatterySinceLastMeasurement: Float = currentToBattery * hoursSinceLastMeasurement
+        val energySinceLastMeasurementWH = solarPanelPowerW * hoursSinceLastMeasurement
 
         totalChargingBatteryAH += ampHoursToBatterySinceLastMeasurement
         cumulativePowerGenerationWH += ampHoursToBatterySinceLastMeasurement * batteryVoltage
+
+        if (lastDailyStats == null || today != lastDailyStatsRetrievedAtDay) {
+            lastDailyStatsRetrievedAtDay = today
+            lastDailyStats = DailyStats(batteryVoltage, batteryVoltage, currentToBattery, 0f,
+                solarPanelPowerW.toUInt().toUShort(), 0.toUShort(), ampHoursToBatterySinceLastMeasurement,
+            0f, energySinceLastMeasurementWH, 0f)
+        } else {
+            lastDailyStats = DailyStats(
+                lastDailyStats!!.batteryMinVoltage.coerceAtMost(batteryVoltage),
+                lastDailyStats!!.batteryMaxVoltage.coerceAtLeast(batteryVoltage),
+                lastDailyStats!!.maxChargingCurrent.coerceAtLeast(currentToBattery),
+                0f,
+                lastDailyStats!!.maxChargingPower.coerceAtLeast(solarPanelPowerW.toUInt().toUShort()),
+                0.toUShort(),
+                lastDailyStats!!.chargingAmpHours + ampHoursToBatterySinceLastMeasurement,
+                0f,
+                lastDailyStats!!.powerGeneration + energySinceLastMeasurementWH,
+                0f
+            )
+        }
 
         lastDailyStatsRetrievedAt = now
     }

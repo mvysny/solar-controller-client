@@ -117,8 +117,8 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
         val maxDischargingCurrent: Float = result.getUShortHiLoAt(6).toFloat() / 100
         val maxChargingPower: UShort = result.getUShortHiLoAt(8)
         val maxDischargingPower: UShort = result.getUShortHiLoAt(10)
-        val chargingAmpHours: UShort = result.getUShortHiLoAt(12)
-        val dischargingAmpHours: UShort = result.getUShortHiLoAt(14)
+        val chargingAmpHours: Float = result.getUShortHiLoAt(12).toFloat()
+        val dischargingAmpHours: Float = result.getUShortHiLoAt(14).toFloat()
         val powerGeneration: Float = result.getUShortHiLoAt(16).toFloat() / 10
         val powerConsumption: Float = result.getUShortHiLoAt(18).toFloat() / 10
         return DailyStats(batteryMinVoltage, batteryMaxVoltage, maxChargingCurrent, maxDischargingCurrent, maxChargingPower, maxDischargingPower, chargingAmpHours, dischargingAmpHours, powerGeneration, powerConsumption)
