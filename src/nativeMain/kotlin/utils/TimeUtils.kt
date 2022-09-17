@@ -137,11 +137,15 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
      */
     fun format(): String = "${date.format()} ${time.format()}"
     companion object {
+        /**
+         * Returns the current date+time.
+         */
         fun now(): LocalDateTime {
-            // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC).
+            // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC). -1 or negative value means error.
             val t: Long = checkNativeNonNegativeLong("time") { time(null) }
-            // localtime() returns a pointer to static data and hence is not thread-safe.
+            // localtime() returns a pointer to static data and hence is not thread-safe. NULL means error.
             val tm: tm = checkNativeNotNull("localtime") { localtime(cValuesOf(t)) } .pointed
+
             val date = LocalDate(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday)
             val time = LocalTime(tm.tm_hour, tm.tm_min, tm.tm_sec)
             return LocalDateTime(date, time)

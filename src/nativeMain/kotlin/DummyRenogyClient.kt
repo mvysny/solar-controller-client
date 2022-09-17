@@ -1,9 +1,6 @@
 @file:OptIn(ExperimentalTime::class)
 
-import utils.Instant
-import utils.LocalDate
-import utils.nextFloat
-import utils.nextUShort
+import utils.*
 import kotlin.random.Random
 import kotlin.system.getTimeMillis
 import kotlin.time.Duration.Companion.milliseconds
@@ -17,6 +14,16 @@ import kotlin.time.ExperimentalTime
 class DummyRenogyClient : RenogyClient {
     val maxSolarPanelVoltage = 61f
     val maxSolarPanelAmperage = 5f
+
+    /**
+     * Adjustment percentage per hour-of-day, so that we generate 0% at midnight. Makes the
+     * dummy data more realistic.
+     */
+    private val solarPanelGenerationPercentagePerHour = listOf<Float>(0f, 0f, 0f, 0f, 0f, 0f,
+        0.1f, 0.3f, 0.6f, 0.75f, 0.8f, 0.8f,
+        0.85f, 0.95f, 0.8f, 0.75f, 0.5f, 0.3f,
+        0.1f, 0f, 0f, 0f, 0f, 0f
+    )
 
     override fun getSystemInfo(): SystemInfo =
         SystemInfo(24, 40, 40, ProductType.Controller, "RENOGY ROVER", "v1.2.3", "v4.5.6", "1501FFFF")
@@ -41,6 +48,7 @@ class DummyRenogyClient : RenogyClient {
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData {
         val systemInfo = cachedSystemInfo ?: getSystemInfo()
+        val now: LocalDateTime = LocalDateTime.now()
 
         // generate dummy power data flowing from the solar panels; calculate the rest of the values
         val solarPanelVoltage = Random.nextFloat(maxSolarPanelVoltage * 0.66f, maxSolarPanelVoltage)
@@ -48,7 +56,7 @@ class DummyRenogyClient : RenogyClient {
         // this is the most important value: how big of a power (in Watts) the solar array is producing at this moment.
         var solarPanelPowerW = solarPanelVoltage * solarPanelCurrent
         // adjust the generated power according to the hour-of-day, so that we won't generate 100% power at midnight :-D
-
+        solarPanelPowerW *= solarPanelGenerationPercentagePerHour[now.time.hour]
 
         val batteryVoltage = Random.nextFloat(
             systemInfo.maxVoltage.toFloat(),
