@@ -32,9 +32,10 @@ class DummyRenogyClient : RenogyClient {
      * When the "device" was powered up (=when this class was created).
      */
     private val poweredOnAt: Instant = Instant.now()
-    private var dailyStats: DailyStats? = null
-    private var lastDailyStatsRetrievedAt: Instant? = null
+    private var lastDailyStatsRetrievedAt: Instant = poweredOnAt
     private var lastDailyStatsRetrievedAtDay: LocalDate? = null
+    private var totalChargingBatteryAH: Float = 0f
+    private var cumulativePowerGenerationWH: Float = 0f
 
     private fun getDailyStats(): DailyStats {
         TODO("implement")
@@ -42,7 +43,7 @@ class DummyRenogyClient : RenogyClient {
 
     private fun getHistoricalData(): HistoricalData {
         val daysUp = (Instant.now() - poweredOnAt).inWholeDays + 1
-        TODO("implement")
+        return HistoricalData(daysUp.toUShort(), 0.toUShort(), 0.toUShort(), totalChargingBatteryAH.toUInt(), 0.toUInt(), cumulativePowerGenerationWH, 0f)
     }
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData {
@@ -61,7 +62,6 @@ class DummyRenogyClient : RenogyClient {
             systemInfo.maxVoltage.toFloat(),
             systemInfo.maxVoltage.toFloat() * 1.19f
         )
-        val nominalBatteryVoltage = systemInfo.maxVoltage.toFloat() // e.g. 24V
         // how much current flows into the battery at the moment.
         val currentToBattery = solarPanelPowerW / batteryVoltage
 
@@ -78,7 +78,7 @@ class DummyRenogyClient : RenogyClient {
             solarPanelCurrent = solarPanelCurrent,
             solarPanelPower = solarPanelPowerW.toInt().toUShort())
 
-        updateStats(solarPanelPowerW, nominalBatteryVoltage)
+        updateStats(solarPanelPowerW, batteryVoltage)
 
         val dummyDailyStats = getDailyStats()
         val dummyHistoricalData = getHistoricalData()
@@ -90,9 +90,17 @@ class DummyRenogyClient : RenogyClient {
     /**
      * Updates statistics. Now we can calculate [DailyStats] and [HistoricalData] correctly.
      * @param solarPanelPowerW solar array produces this amount of watts now.
-     * @param nominalBatteryVoltage 24V. Use nominal voltage instead of actual voltage for simplicity.
+     * @param batteryVoltage actual battery voltage.
      */
-    private fun updateStats(solarPanelPowerW: Float, nominalBatteryVoltage: Float) {
-        TODO("implement")
+    private fun updateStats(solarPanelPowerW: Float, batteryVoltage: Float) {
+        val currentToBattery = solarPanelPowerW / batteryVoltage
+        val now = Instant.now()
+        val millisSinceLastMeasurement = now - lastDailyStatsRetrievedAt
+        val ampHoursToBatterySinceLastMeasurement: Float = currentToBattery * millisSinceLastMeasurement.inWholeMilliseconds / 1000f / 60f / 60f
+
+        totalChargingBatteryAH += ampHoursToBatterySinceLastMeasurement
+        cumulativePowerGenerationWH += ampHoursToBatterySinceLastMeasurement * batteryVoltage
+
+        lastDailyStatsRetrievedAt = now
     }
 }

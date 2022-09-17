@@ -84,7 +84,7 @@ enum class ControllerFaults(val bit: Int) {
  * @param daysUp Total number of operating days
  * @param batteryOverDischargeCount Total number of battery over-discharges
  * @param batteryFullChargeCount Total number of battery full-charges.
- * @param totalChargingBatteryAH Total charging amp-hrs of the battery. mavi: does this refer to the nominal battery voltage (e.g. 24V) or actual battery voltage (e.g. 27V)?
+ * @param totalChargingBatteryAH Total charging amp-hrs of the battery.
  * @param totalDischargingBatteryAH Total discharging amp-hrs of the battery. mavi: probably only applicable to inverters, 0 for controller.
  * @param cumulativePowerGenerationWH cumulative power generation in WH. Probably only applies to controller, will be 0 for inverter.
  * @param cumulativePowerConsumptionWH cumulative power consumption in WH. mavi: probably only applicable to inverters, 0 for controller.
@@ -104,12 +104,12 @@ data class HistoricalData(
  * The daily statistics.
  * @param batteryMinVoltage Battery's min. voltage of the current day, V
  * @param batteryMaxVoltage Battery's max. voltage of the current day, V
- * @param maxChargingCurrent Max. charging current of the current day, A. Probably applies to controller only. Does this refer to battery nominal voltage (e.g. 24V)?
- * @param maxDischargingCurrent Max. discharging current of the current day, A. mavi: probably only applies to inverter; will be 0 for controller. Probably refers to battery nominal voltage (e.g. 24V) or actual battery voltage?
+ * @param maxChargingCurrent Max. charging current of the current day, A. Probably applies to controller only.
+ * @param maxDischargingCurrent Max. discharging current of the current day, A. mavi: probably only applies to inverter; will be 0 for controller.
  * @param maxChargingPower Max. charging power of the current day, W. mavi: probably only applies to controller; will be 0 for inverter.
  * @param maxDischargingPower Max. discharging power of the current day, W. mavi: probably only applies to inverter; will be 0 for controller.
- * @param chargingAmpHours Charging amp-hrs of the current day, AH. mavi: probably only applies to controller; will be 0 for inverter. Does this refer to nominal battery voltage (24V)?
- * @param dischargingAmpHours Discharging amp-hrs of the current day, AH. mavi: probably only applies to inverter; will be 0 for controller. Does this refer to nominal battery voltage (24V)?
+ * @param chargingAmpHours Charging amp-hrs of the current day, AH. mavi: probably only applies to controller; will be 0 for inverter.
+ * @param dischargingAmpHours Discharging amp-hrs of the current day, AH. mavi: probably only applies to inverter; will be 0 for controller.
  * @param powerGeneration Power generation of the current day, WH. Probably only applies to controller.
  * @param powerConsumption Power consumption of the current day, WH. Probably only applies to inverter.
  */
