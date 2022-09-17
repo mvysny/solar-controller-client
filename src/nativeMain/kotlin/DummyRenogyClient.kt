@@ -51,7 +51,7 @@ class DummyRenogyClient : RenogyClient {
 
         // generate dummy power data flowing from the solar panels; calculate the rest of the values
         val solarPanelVoltage = Random.nextFloat(maxSolarPanelVoltage * 0.66f, maxSolarPanelVoltage)
-        val solarPanelCurrent = Random.nextFloat(0f, maxSolarPanelAmperage)
+        val solarPanelCurrent = Random.nextFloat(maxSolarPanelAmperage / 2, maxSolarPanelAmperage)
         // this is the most important value: this is the power (in Watts) the solar array is producing at this moment.
         var solarPanelPowerW = solarPanelVoltage * solarPanelCurrent
         // adjust the generated power according to the hour-of-day, so that we won't generate 100% power at midnight :-D
