@@ -15,8 +15,9 @@ For exact instructions on how to connect Renogy Rover RS232/RJ12 over an USB ada
 
 ## Advanced use
 
-TODO document how to use Apache/nginx to serve the CSV files. Maybe the app could dump a nice HTML file with all stats?
-Optionally dump into JSON as well. Perhaps integration with Home Assistant? Over MQTT?
+Use Grafana and the CSV plugin to read the CSV file and show charging data in charts.
+
+TODO example of charts.
 
 # Compiling
 
@@ -121,11 +122,12 @@ The status JSON example:
 }
 ```
 
-TODO the example CSV file.
+The CSV file contains the same fields, in a tabular form.
 
-# Further development
+## Dummy Renogy Device
 
-Tasks to do:
+Use `dummy` instead of the device name. This will create a dummy renogy device and poll data off it:
 
-* finalize the format of the CSV
-* Also optionally dump a HTML file which can be served over python3
+```bash
+$ solar-controller-client.kexe dummy
+```
