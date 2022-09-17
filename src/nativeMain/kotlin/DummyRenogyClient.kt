@@ -11,8 +11,13 @@ import kotlin.time.ExperimentalTime
 
 /**
  * Returns random data, emulating stuff returned by an actual Renogy Client
+ * @property maxSolarPanelAmperage max rated amperage of the solar panel array
+ * @property maxSolarPanelVoltage max rated voltage of the solar panel array
  */
 class DummyRenogyClient : RenogyClient {
+    val maxSolarPanelVoltage = 61f
+    val maxSolarPanelAmperage = 5f
+
     override fun getSystemInfo(): SystemInfo =
         SystemInfo(24, 40, 40, ProductType.Controller, "RENOGY ROVER", "v1.2.3", "v4.5.6", "1501FFFF")
 
@@ -36,15 +41,28 @@ class DummyRenogyClient : RenogyClient {
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData {
         val systemInfo = cachedSystemInfo ?: getSystemInfo()
-        val solarPanelVoltage = Random.nextFloat(40f, 61f)
-        val solarPanelCurrent = Random.nextFloat(0f, 10f)
+
+        // generate dummy power data flowing from the solar panels; calculate the rest of the values
+        val solarPanelVoltage = Random.nextFloat(maxSolarPanelVoltage * 0.66f, maxSolarPanelVoltage)
+        val solarPanelCurrent = Random.nextFloat(0f, maxSolarPanelAmperage)
+        // this is the most important value: how big of a power (in Watts) the solar array is producing at this moment.
+        var solarPanelPowerW = solarPanelVoltage * solarPanelCurrent
+        // adjust the generated power according to the hour-of-day, so that we won't generate 100% power at midnight :-D
+
+
+        val batteryVoltage = Random.nextFloat(
+            systemInfo.maxVoltage.toFloat(),
+            systemInfo.maxVoltage.toFloat() * 1.19f
+        )
+        val currentToBattery = solarPanelPowerW / batteryVoltage
+
         val dummyPowerStatus = PowerStatus(
             batterySOC = Random.nextUShort(66.toUShort(), 100.toUShort()),
-            batteryVoltage = Random.nextFloat(24f, 28f),
-            chargingCurrentToBattery = Random.nextFloat(0f, 10f),
+            batteryVoltage = batteryVoltage,
+            chargingCurrentToBattery = currentToBattery,
             batteryTemp = Random.nextInt(18, 24),
             controllerTemp = Random.nextInt(18, 24),
-            loadVoltage = 0f,
+            loadVoltage = 0f, // ignore the load, pretend there's none
             loadCurrent = 0f,
             loadPower = 0.toUShort(),
             solarPanelVoltage = solarPanelVoltage,
