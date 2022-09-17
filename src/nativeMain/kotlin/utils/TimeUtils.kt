@@ -4,6 +4,13 @@ import kotlinx.cinterop.cValue
 import kotlinx.cinterop.cValuesOf
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.staticCFunction
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import platform.posix.*
 import kotlin.system.getTimeMillis
 import kotlin.time.Duration
@@ -85,6 +92,7 @@ fun repeatEvery(millis: Long, block: () -> Boolean) {
  * @property month 1..12
  * @property day 1..31
  */
+@Serializable(with = LocalDateSerializer::class)
 data class LocalDate(val year: Int, val month: Int, val day: Int) : Comparable<LocalDate> {
     init {
         require(month in 1..12) { "month: expected 1..12 but was $month" }
@@ -100,6 +108,18 @@ data class LocalDate(val year: Int, val month: Int, val day: Int) : Comparable<L
 
     companion object {
         fun today(): LocalDate = LocalDateTime.now().date
+
+        private val FORMAT_PATTERN = Regex("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)")
+
+        /**
+         * Parses the value produced by [format].
+         * @param formatted in the form of `yyyy-MM-dd`.
+         */
+        fun parse(formatted: String): LocalDate {
+            val result = FORMAT_PATTERN.matchEntire(formatted)
+            requireNotNull(result) { "parsed string must be in the format of yyyy-MM-dd but got $formatted" }
+            return LocalDate(result.groupValues[1].toInt(), result.groupValues[2].toInt(), result.groupValues[3].toInt())
+        }
     }
 }
 
@@ -108,6 +128,7 @@ data class LocalDate(val year: Int, val month: Int, val day: Int) : Comparable<L
  * @property minute 0..59
  * @property second 0..61
  */
+@Serializable(with = LocalTimeSerializer::class)
 data class LocalTime(val hour: Int, val minute: Int, val second: Int) : Comparable<LocalTime> {
     init {
         require(hour in 0..23) { "hour: expected 0..23 but was $hour" }
@@ -126,9 +147,21 @@ data class LocalTime(val hour: Int, val minute: Int, val second: Int) : Comparab
         fun now(): LocalTime = LocalDateTime.now().time
         val MIDNIGHT = LocalTime(0, 0, 0)
         val MIN = MIDNIGHT
+        private val FORMAT_PATTERN = Regex("(\\d\\d):(\\d\\d):(\\d\\d)")
+
+        /**
+         * Parses the value produced by [format].
+         * @param formatted in the form of `HH:mm:ss`.
+         */
+        fun parse(formatted: String): LocalTime {
+            val result = FORMAT_PATTERN.matchEntire(formatted)
+            requireNotNull(result) { "parsed string must be in the format of HH:mm:ss but got $formatted" }
+            return LocalTime(result.groupValues[1].toInt(), result.groupValues[2].toInt(), result.groupValues[3].toInt())
+        }
     }
 }
 
+@Serializable
 data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<LocalDateTime> {
     override fun compareTo(other: LocalDateTime): Int = compareValuesBy(this, other, { it.date }, { it.time })
 
@@ -150,6 +183,28 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
             val time = LocalTime(tm.tm_hour, tm.tm_min, tm.tm_sec)
             return LocalDateTime(date, time)
         }
+    }
+}
+
+private object LocalTimeSerializer : KSerializer<LocalTime> {
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor("LocalTime", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): LocalTime = LocalTime.parse(decoder.decodeString())
+
+    override fun serialize(encoder: Encoder, value: LocalTime) {
+        encoder.encodeString(value.format())
+    }
+}
+
+private object LocalDateSerializer : KSerializer<LocalDate> {
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor("LocalDate", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): LocalDate = LocalDate.parse(decoder.decodeString())
+
+    override fun serialize(encoder: Encoder, value: LocalDate) {
+        encoder.encodeString(value.format())
     }
 }
 
