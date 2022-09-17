@@ -61,7 +61,8 @@ class DummyRenogyClient : RenogyClient {
             systemInfo.maxVoltage.toFloat(),
             systemInfo.maxVoltage.toFloat() * 1.19f
         )
-        // how much current flows into the battery.
+        val nominalBatteryVoltage = systemInfo.maxVoltage.toFloat() // e.g. 24V
+        // how much current flows into the battery at the moment.
         val currentToBattery = solarPanelPowerW / batteryVoltage
 
         val dummyPowerStatus = PowerStatus(
@@ -76,7 +77,8 @@ class DummyRenogyClient : RenogyClient {
             solarPanelVoltage = solarPanelVoltage,
             solarPanelCurrent = solarPanelCurrent,
             solarPanelPower = solarPanelPowerW.toInt().toUShort())
-        updateStats(solarPanelPowerW)
+
+        updateStats(solarPanelPowerW, nominalBatteryVoltage)
 
         val dummyDailyStats = getDailyStats()
         val dummyHistoricalData = getHistoricalData()
@@ -86,8 +88,11 @@ class DummyRenogyClient : RenogyClient {
     }
 
     /**
+     * Updates statistics. Now we can calculate [DailyStats] and [HistoricalData] correctly.
      * @param solarPanelPowerW solar array produces this amount of watts now.
+     * @param nominalBatteryVoltage 24V. Use nominal voltage instead of actual voltage for simplicity.
      */
-    private fun updateStats(solarPanelPowerW: Float) {
+    private fun updateStats(solarPanelPowerW: Float, nominalBatteryVoltage: Float) {
+        TODO("implement")
     }
 }
