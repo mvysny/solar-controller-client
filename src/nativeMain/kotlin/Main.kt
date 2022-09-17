@@ -65,7 +65,9 @@ private fun File.appendCSV(data: RenogyData) {
                 "Stats.BatteryOverDischargeCount",
                 "Stats.BatteryFullChargeCount",
                 "Stats.TotalChargingBatteryAH",
-                "Stats.CumulativePowerGenerationWH"
+                "Stats.CumulativePowerGenerationWH",
+                "ChargingState",
+                "Faults"
             )
         }
         csv.writeLine(
@@ -88,7 +90,9 @@ private fun File.appendCSV(data: RenogyData) {
             data.historicalData.batteryOverDischargeCount,
             data.historicalData.batteryFullChargeCount,
             data.historicalData.totalChargingBatteryAH,
-            data.historicalData.cumulativePowerGenerationWH
+            data.historicalData.cumulativePowerGenerationWH,
+            data.status.chargingState?.name,
+            data.status.faults.joinToString(",") { it.name }
         )
     }
 }
