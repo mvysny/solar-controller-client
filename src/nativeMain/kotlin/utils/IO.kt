@@ -56,6 +56,15 @@ interface IO {
         read(bytes)
         return bytes
     }
+
+    fun write(line: String) {
+        write(line.encodeToByteArray())
+    }
+
+    fun writeln(line: String) {
+        write(line)
+        write(byteArrayOf('\n'.code.toByte()))
+    }
 }
 
 /**
@@ -66,19 +75,31 @@ open class IOException(message: String, cause: Throwable? = null, val errno: Int
 open class EOFException(message: String, cause: Throwable? = null) : IOException(message, cause)
 open class FileNotFoundException(message: String, cause: Throwable? = null) : IOException(message, cause, 2)
 
+data class File(val pathname: String) {
+    init {
+        require(pathname.isNotBlank()) { "pathname is blank" }
+    }
+    fun openAppend(mode: Int = rwrwr): IOFile = IOFile(this, O_WRONLY or O_APPEND or O_CREAT, mode)
+    fun openOverwrite(mode: Int = rwrwr): IOFile = IOFile(this, O_WRONLY or O_TRUNC or O_CREAT, mode)
+    fun openRead(): IOFile = IOFile(this, O_RDONLY)
+    fun writeContents(contents: String) {
+        openOverwrite().use { file -> file.write(contents.encodeToByteArray()) }
+    }
+    fun appendContents(contents: String) {
+        openAppend().use { file -> file.write(contents.encodeToByteArray()) }
+    }
+}
+
 /**
- * Reads/writes from/to a file with given [fname].
+ * Reads/writes from/to a file with given [file].
  * @param oflag the open file flag, one of `O_*` constants. Most useful combos:
  * `O_WRONLY or O_TRUNC or O_CREAT` overwrites the file with a zero-sized one;
  * `O_WRONLY or O_APPEND or O_CREAT` starts writing at the end of the file, creating it if necessary;
  * `O_RDWR` - opens the file for read/write; the file must exist.
  * @param mode the file mode when it's created, e.g. `S_IRWXU`.
  */
-open class IOFile(val fname: String, oflag: Int = O_RDWR, mode: Int = 0) : IO, Closeable {
-    init {
-        require(fname.isNotBlank()) { "fname is blank" }
-    }
-    protected val fd: Int = checkNativeNonNegative("open $fname") { open(fname, oflag, mode) }
+open class IOFile(val file: File, oflag: Int = O_RDWR, mode: Int = 0) : IO, Closeable {
+    protected val fd: Int = checkNativeNonNegative("open $file") { open(file.pathname, oflag, mode) }
 
     override fun write(bytes: ByteArray) {
         var current = 0
@@ -111,15 +132,15 @@ open class IOFile(val fname: String, oflag: Int = O_RDWR, mode: Int = 0) : IO, C
         checkNativeZero("close") { close(fd) }
     }
 
-    override fun toString(): String = "IOFile('$fname')"
+    override fun toString(): String = "IOFile('$file')"
 }
 
 /**
- * A serial port IO, opens a serial port communication over given [fname].
+ * A serial port IO, opens a serial port communication over given [file].
  *
  * Don't forget to call [configure]!
  */
-class SerialPort(fname: String) : IOFile(fname) {
+class SerialPort(file: File) : IOFile(file) {
     /**
      * Configure the serial port to 9600 baud, 8 bits, 1 stop bit, no parity.
      * @param baud the desired baud rate, one of the `B*` constants, e.g. [B9600].
@@ -129,7 +150,7 @@ class SerialPort(fname: String) : IOFile(fname) {
         // taken from https://blog.mbedded.ninja/programming/operating-systems/linux/linux-serial-ports-using-c-cpp/#reading-and-writing
         memScoped {
             val tty: termios = alloc<termios>()
-            checkNativeZero("tcgetattr (get serial port configuration) for $fname") { tcgetattr(fd, tty.ptr) }
+            checkNativeZero("tcgetattr (get serial port configuration) for $file") { tcgetattr(fd, tty.ptr) }
 
             tty.c_cflag = tty.c_cflag.remove(PARENB) // Clear parity bit, disabling parity (most common)
             tty.c_cflag = tty.c_cflag.remove(CSTOPB) // Clear stop field, only one stop bit used in communication (most common)
@@ -158,17 +179,11 @@ class SerialPort(fname: String) : IOFile(fname) {
             checkNativeZero("cfsetispeed") { cfsetispeed(tty.ptr, baud.toUInt()) }
             checkNativeZero("cfsetospeed") { cfsetospeed(tty.ptr, baud.toUInt()) }
 
-            checkNativeZero("tcsetattr (set serial port configuration) for $fname") { tcsetattr(fd, TCSANOW, tty.ptr) }
+            checkNativeZero("tcsetattr (set serial port configuration) for $file") { tcsetattr(fd, TCSANOW, tty.ptr) }
         }
     }
 
-    override fun toString(): String = "SerialPort('$fname')"
+    override fun toString(): String = "SerialPort('$file')"
 }
 
 private val rwrwr = S_IRUSR or S_IWUSR or S_IRGRP or S_IWGRP or S_IROTH
-fun writeToFile(fname: String, contents: String) {
-    IOFile(fname, O_WRONLY or O_TRUNC or O_CREAT, rwrwr).use { file -> file.write(contents.encodeToByteArray()) }
-}
-fun appendToFile(fname: String, contents: String) {
-    IOFile(fname, O_WRONLY or O_APPEND or O_CREAT, rwrwr).use { file -> file.write(contents.encodeToByteArray()) }
-}
