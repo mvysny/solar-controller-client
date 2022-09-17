@@ -138,7 +138,7 @@ open class IOFile(val file: File, oflag: Int = O_RDWR, mode: Int = 0) : IO, Clos
         checkNativeZero("close") { close(fd) }
     }
 
-    override fun toString(): String = "IOFile('$file')"
+    override fun toString(): String = "IOFile($file)"
 }
 
 /**
@@ -189,7 +189,21 @@ class SerialPort(file: File) : IOFile(file) {
         }
     }
 
-    override fun toString(): String = "SerialPort('$file')"
+    override fun toString(): String = "SerialPort($file)"
 }
 
 private val rwrwr = S_IRUSR or S_IWUSR or S_IRGRP or S_IWGRP or S_IROTH
+
+/**
+ * All written bytes are thrown away; provides an endless stream of zeroes as input.
+ */
+class DevZero: IO {
+    override fun write(bytes: ByteArray) {}
+
+    override fun read(bytes: ByteArray) {
+        bytes.fill(0.toByte())
+    }
+
+    override fun close() {}
+    override fun toString(): String = "DevZero()"
+}

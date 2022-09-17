@@ -161,6 +161,9 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
         getStatus()
     )
 
+    override fun toString(): String =
+        "RenogyModbusClient(io=$io, deviceAddress=$deviceAddress)"
+
     companion object {
         private val COMMAND_READ_REGISTER: Byte = 0x03
     }
