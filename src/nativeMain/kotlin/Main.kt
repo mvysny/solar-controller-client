@@ -17,7 +17,7 @@ fun main(args: Array<String>) {
     io.use { serialPort ->
         (serialPort as? SerialPort)?.configure()
         val utc2 = utc == true
-        val client: RenogyClient = if (isDummy) DummyRenogyClient(utc2) else RenogyModbusClient(serialPort, utc = utc2)
+        val client: RenogyClient = if (isDummy) DummyRenogyClient() else RenogyModbusClient(serialPort)
 
         if (status == true) {
             val allData: RenogyData = client.getAllData()
@@ -35,14 +35,14 @@ fun main(args: Array<String>) {
             repeatEvery((pollingInterval ?: 10) * 1000L) {
                 val allData: RenogyData = client.getAllData(systemInfo)
                 stateFile2.writeContents(allData.toJson())
-                logFile2.appendCSV(allData)
+                logFile2.appendCSV(allData, utc2)
                 true
             }
         }
     }
 }
 
-private fun File.appendCSV(data: RenogyData) {
+private fun File.appendCSV(data: RenogyData, utc: Boolean) {
     val writeHeader = !exists()
     openAppend().use { io ->
         val csv = CSVWriter(io)
@@ -73,7 +73,7 @@ private fun File.appendCSV(data: RenogyData) {
             )
         }
         csv.writeLine(
-            data.capturedAt.format(),
+            if (utc) ZonedDateTime.now(ZoneId.UTC).format() else LocalDateTime.now().format(),
             data.powerStatus.batterySOC,
             data.powerStatus.batteryVoltage,
             data.powerStatus.chargingCurrentToBattery,

@@ -175,17 +175,13 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
     fun format(): String = "${date.format()} ${time.format()}"
     companion object {
         /**
-         * Returns the current date+time in user local time zone, or alternatively in UTC if [utc] is true.
+         * Returns the current date+time in user's local time zone.
          */
-        fun now(utc: Boolean = false): LocalDateTime {
+        fun now(): LocalDateTime {
             // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC). -1 or negative value means error.
             val t: Long = checkNativeNonNegativeLong("time") { time(null) }
             // localtime() returns a pointer to static data and hence is not thread-safe. NULL means error.
-            val tm: tm = if (utc) {
-                checkNativeNotNull("gmtime") { gmtime(cValuesOf(t)) } .pointed
-            } else {
-                checkNativeNotNull("localtime") { localtime(cValuesOf(t)) } .pointed
-            }
+            val tm: tm = checkNativeNotNull("localtime") { localtime(cValuesOf(t)) } .pointed
 
             val date = LocalDate(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday)
             val time = LocalTime(tm.tm_hour, tm.tm_min, tm.tm_sec)
@@ -195,11 +191,11 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
         private val FORMAT_PATTERN = Regex("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) (\\d\\d):(\\d\\d):(\\d\\d)")
         /**
          * Parses the value produced by [format].
-         * @param formatted in the form of `HH:mm:ss`.
+         * @param formatted in the form of `yyyy-MM-dd HH:mm:ss`.
          */
         fun parse(formatted: String): LocalDateTime {
             val result = FORMAT_PATTERN.matchEntire(formatted)
-            requireNotNull(result) { "parsed string must be in the format of HH:mm:ss but got $formatted" }
+            requireNotNull(result) { "parsed string must be in the format of yyyy-MM-dd HH:mm:ss but got $formatted" }
             val date = LocalDate(
                 result.groupValues[1].toInt(),
                 result.groupValues[2].toInt(),
@@ -207,6 +203,51 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
             )
             val time = LocalTime(result.groupValues[4].toInt(), result.groupValues[5].toInt(), result.groupValues[6].toInt())
             return LocalDateTime(date, time)
+        }
+    }
+}
+
+enum class ZoneId {
+    UTC
+}
+
+@Serializable(with = ZonedDateTimeSerializer::class)
+data class ZonedDateTime(val dateTime: LocalDateTime, val zone: ZoneId) {
+    /**
+     * Formats the date+time in RFC 3339 `yyyy-MM-ddTHH:mm:ssZ`.
+     */
+    fun format(): String = "${dateTime.date.format()}T${dateTime.time.format()}Z"
+
+    companion object {
+        /**
+         * Returns the current date+time in user local time zone, or alternatively in UTC if [utc] is true.
+         */
+        fun now(zone: ZoneId = ZoneId.UTC): LocalDateTime {
+            // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC). -1 or negative value means error.
+            val t: Long = checkNativeNonNegativeLong("time") { time(null) }
+            // localtime() returns a pointer to static data and hence is not thread-safe. NULL means error.
+            val tm: tm = checkNativeNotNull("gmtime") { gmtime(cValuesOf(t)) } .pointed
+
+            val date = LocalDate(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday)
+            val time = LocalTime(tm.tm_hour, tm.tm_min, tm.tm_sec)
+            return LocalDateTime(date, time)
+        }
+
+        private val FORMAT_PATTERN = Regex("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)Z")
+        /**
+         * Parses the value produced by [format].
+         * @param formatted in the form of RFC 3339 `yyyy-MM-ddTHH:mm:ssZ`.
+         */
+        fun parse(formatted: String): ZonedDateTime {
+            val result = FORMAT_PATTERN.matchEntire(formatted)
+            requireNotNull(result) { "parsed string must be in the format of yyyy-MM-ddTHH:mm:ssZ but got $formatted" }
+            val date = LocalDate(
+                result.groupValues[1].toInt(),
+                result.groupValues[2].toInt(),
+                result.groupValues[3].toInt()
+            )
+            val time = LocalTime(result.groupValues[4].toInt(), result.groupValues[5].toInt(), result.groupValues[6].toInt())
+            return ZonedDateTime(LocalDateTime(date, time), ZoneId.UTC)
         }
     }
 }
@@ -244,6 +285,17 @@ object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     }
 }
 
+object ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor("ZonedDateTime", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): ZonedDateTime = ZonedDateTime.parse(decoder.decodeString())
+
+    override fun serialize(encoder: Encoder, value: ZonedDateTime) {
+        encoder.encodeString(value.format())
+    }
+}
+
 /**
  * An instant in time. Only delta between two subsequent instants makes sense.
  * @property millis current system time in milliseconds since certain moment in the past,
@@ -265,3 +317,4 @@ value class Instant private constructor(private val millis: Long) : Comparable<I
 fun String.toLocalTime() = LocalTime.parse(this)
 fun String.toLocalDate() = LocalDate.parse(this)
 fun String.toLocalDateTime() = LocalDateTime.parse(this)
+fun String.toZonedDateTime() = ZonedDateTime.parse(this)

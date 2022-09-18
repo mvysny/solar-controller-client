@@ -43,6 +43,29 @@ class LocalDateTest {
     }
 }
 
+class ZonedDateTimeTest {
+    @Test
+    fun testNow() {
+        ZonedDateTime.now()
+    }
+
+    @Test
+    fun testFormat() {
+        expect("2022-01-01T01:23:45Z") { ZonedDateTime(LocalDateTime(LocalDate(2022, 1, 1), LocalTime(1, 23, 45)), ZoneId.UTC).format() }
+    }
+
+    @Test
+    fun testParse() {
+        expect(ZonedDateTime(LocalDateTime(LocalDate(2022, 1, 1), LocalTime(1, 23, 45)), ZoneId.UTC)) { "2022-01-01T01:23:45Z".toZonedDateTime() }
+    }
+
+    @Test
+    fun testFromToJson() {
+        expect(ZonedDateTime(LocalDateTime(LocalDate(2022, 1, 1), LocalTime(1, 23, 45)), ZoneId.UTC)) { Json.decodeFromString("\"2022-01-01T01:23:45Z\"") }
+        expect("\"2022-01-01T01:23:45Z\"") { Json.encodeToString(ZonedDateTime(LocalDateTime(LocalDate(2022, 1, 1), LocalTime(1, 23, 45)), ZoneId.UTC)) }
+    }
+}
+
 class LocalDateTimeTest {
     @Test
     fun testNow() {

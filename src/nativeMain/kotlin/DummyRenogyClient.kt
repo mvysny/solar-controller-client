@@ -9,7 +9,7 @@ import kotlin.time.ExperimentalTime
  * @property maxSolarPanelAmperage max rated amperage of the solar panel array
  * @property maxSolarPanelVoltage max rated voltage of the solar panel array
  */
-class DummyRenogyClient(val utc: Boolean) : RenogyClient {
+class DummyRenogyClient() : RenogyClient {
     val maxSolarPanelVoltage = 61f
     val maxSolarPanelAmperage = 5f
 
@@ -81,7 +81,6 @@ class DummyRenogyClient(val utc: Boolean) : RenogyClient {
         val dummyHistoricalData = getHistoricalData()
         val dummyStatus = RenogyStatus(false, 0.toUByte(), ChargingState.MpptChargingMode, setOf())
         val dummyRenogyData = RenogyData(
-            if (utc) LocalDateTime.now(true) else now,
             systemInfo,
             dummyPowerStatus,
             dummyDailyStats,

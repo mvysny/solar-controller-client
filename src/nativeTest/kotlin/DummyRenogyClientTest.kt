@@ -4,7 +4,7 @@ import kotlin.test.Test
 class DummyRenogyClientTest {
     @Test
     fun smoke() {
-        val client = DummyRenogyClient(false)
+        val client = DummyRenogyClient()
         client.getAllData()
         client.getAllData()
         sleepMillis(10)
