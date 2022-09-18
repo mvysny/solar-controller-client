@@ -222,7 +222,7 @@ data class ZonedDateTime(val dateTime: LocalDateTime, val zone: ZoneId) {
         /**
          * Returns the current date+time in user local time zone, or alternatively in UTC if [utc] is true.
          */
-        fun now(zone: ZoneId = ZoneId.UTC): LocalDateTime {
+        fun now(zone: ZoneId = ZoneId.UTC): ZonedDateTime {
             // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC). -1 or negative value means error.
             val t: Long = checkNativeNonNegativeLong("time") { time(null) }
             // localtime() returns a pointer to static data and hence is not thread-safe. NULL means error.
@@ -230,7 +230,7 @@ data class ZonedDateTime(val dateTime: LocalDateTime, val zone: ZoneId) {
 
             val date = LocalDate(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday)
             val time = LocalTime(tm.tm_hour, tm.tm_min, tm.tm_sec)
-            return LocalDateTime(date, time)
+            return ZonedDateTime(LocalDateTime(date, time), zone)
         }
 
         private val FORMAT_PATTERN = Regex("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)Z")
