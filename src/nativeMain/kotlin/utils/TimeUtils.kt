@@ -253,3 +253,7 @@ value class Instant private constructor(private val millis: Long) : Comparable<I
         fun now(): Instant = Instant(getTimeMillis())
     }
 }
+
+fun String.toLocalTime() = LocalTime.parse(this)
+fun String.toLocalDate() = LocalDate.parse(this)
+fun String.toLocalDateTime() = LocalDateTime.parse(this)

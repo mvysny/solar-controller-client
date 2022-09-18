@@ -22,8 +22,8 @@ class LocalDateTest {
 
     @Test
     fun parse() {
-        expect(LocalDate(2022, 1, 1)) { LocalDate.parse("2022-01-01") }
-        expect(LocalDate(1995, 12, 25)) { LocalDate.parse("1995-12-25") }
+        expect(LocalDate(2022, 1, 1)) { "2022-01-01".toLocalDate() }
+        expect(LocalDate(1995, 12, 25)) { "1995-12-25".toLocalDate() }
     }
 
     @Test
@@ -56,7 +56,7 @@ class LocalDateTimeTest {
 
     @Test
     fun testParse() {
-        expect(LocalDateTime(LocalDate(2022, 1, 1), LocalTime(1, 23, 45))) { LocalDateTime.parse("2022-01-01 01:23:45") }
+        expect(LocalDateTime(LocalDate(2022, 1, 1), LocalTime(1, 23, 45))) { "2022-01-01 01:23:45".toLocalDateTime() }
     }
 
     @Test
@@ -75,10 +75,16 @@ class LocalTimeTest {
     }
 
     @Test
+    fun leapSeconds() {
+        expect("23:59:60") { LocalTime(23, 59, 60).format() }
+        expect(LocalTime(23, 59, 60)) { "23:59:60".toLocalTime() }
+    }
+
+    @Test
     fun testParse() {
-        expect(LocalTime(1, 23, 45)) { LocalTime.parse("01:23:45") }
-        expect(LocalTime.MIDNIGHT) { LocalTime.parse("00:00:00") }
-        expect(LocalTime(23, 1, 9)) { LocalTime.parse("23:01:09") }
+        expect(LocalTime(1, 23, 45)) { "01:23:45".toLocalTime() }
+        expect(LocalTime.MIDNIGHT) { "00:00:00".toLocalTime() }
+        expect(LocalTime(23, 1, 9)) { "23:01:09".toLocalTime() }
     }
 
     @Test
