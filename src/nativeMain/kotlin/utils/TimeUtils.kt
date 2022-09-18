@@ -87,6 +87,10 @@ fun repeatEvery(millis: Long, block: () -> Boolean) {
     }
 }
 
+// there's kotlinx-datetime library which I could use, but sadly there are two issues:
+// no ARM support: https://github.com/Kotlin/kotlinx-datetime/issues/165
+// no support for leap seconds: https://github.com/Kotlin/kotlinx-datetime/issues/230
+
 /**
  * @property year e.g. 2022
  * @property month 1..12
@@ -126,14 +130,14 @@ data class LocalDate(val year: Int, val month: Int, val day: Int) : Comparable<L
 /**
  * @property hour 0..23
  * @property minute 0..59
- * @property second 0..61
+ * @property second 0..60
  */
 @Serializable(with = LocalTimeSerializer::class)
 data class LocalTime(val hour: Int, val minute: Int, val second: Int) : Comparable<LocalTime> {
     init {
         require(hour in 0..23) { "hour: expected 0..23 but was $hour" }
         require(minute in 0..59) { "minute: expected 0..59 but was $minute" }
-        require(second in 0..61) { "second: expected 0..61 but was $second" }
+        require(second in 0..60) { "second: expected 0..60 but was $second" }
     }
     val secondsSinceMidnight: Int get() = ((hour * 60) + minute) * 60 + second
     override fun compareTo(other: LocalTime): Int = secondsSinceMidnight.compareTo(other.secondsSinceMidnight)
