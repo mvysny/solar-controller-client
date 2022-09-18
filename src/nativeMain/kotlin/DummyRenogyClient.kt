@@ -11,7 +11,7 @@ import kotlin.time.ExperimentalTime
  * @property maxSolarPanelAmperage max rated amperage of the solar panel array
  * @property maxSolarPanelVoltage max rated voltage of the solar panel array
  */
-class DummyRenogyClient : RenogyClient {
+class DummyRenogyClient(val utc: Boolean) : RenogyClient {
     val maxSolarPanelVoltage = 61f
     val maxSolarPanelAmperage = 5f
 
@@ -47,7 +47,7 @@ class DummyRenogyClient : RenogyClient {
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData {
         val systemInfo = cachedSystemInfo ?: getSystemInfo()
-        val now: LocalDateTime = LocalDateTime.now()
+        val now: LocalDateTime = LocalDateTime.now(utc)
 
         // generate dummy power data flowing from the solar panels; calculate the rest of the values
         val solarPanelVoltage = Random.nextFloat(maxSolarPanelVoltage * 0.66f, maxSolarPanelVoltage)

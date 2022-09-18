@@ -2,7 +2,7 @@
 
 import utils.*
 
-class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyClient {
+class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01, val utc: Boolean = false) : RenogyClient {
     init {
         require(deviceAddress in 0..0xf7) { "$deviceAddress: Device address must be 0x01..0xf7, 0x00 is a broadcast address to which all slaves respond but do not return commands" }
     }
@@ -153,7 +153,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
     }
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData = RenogyData(
-        LocalDateTime.now(),
+        LocalDateTime.now(utc),
         cachedSystemInfo ?: getSystemInfo(),
         getPowerStatus(),
         getDailyStats(),

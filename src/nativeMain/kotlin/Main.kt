@@ -6,6 +6,7 @@ fun main(args: Array<String>) {
     val parser = ArgParser("solar-controller-client")
     val device by parser.argument(ArgType.String, description = "the file name of the serial device to communicate with, e.g. /dev/ttyUSB0 . Pass in `dummy` for a dummy Renogy client")
     val status by parser.option(ArgType.Boolean, fullName = "status", description = "print the Renogy Rover status as JSON to stdout and quit")
+    val utc by parser.option(ArgType.Boolean, fullName = "utc", description = "dump date in UTC instead of local, handy for Grafana")
     val logfile by parser.option(ArgType.String, fullName = "logfile", description = "appends status to file other than the default 'log.csv'")
     val statefile by parser.option(ArgType.String, fullName = "statefile", description = "overwrites status to file other than the default 'status.json'")
     val pollingInterval by parser.option(ArgType.Int, fullName = "pollinginterval", shortName = "i", description = "in seconds: how frequently to poll the controller for data, defaults to 10")
@@ -15,7 +16,8 @@ fun main(args: Array<String>) {
     val io: IO = if (isDummy) DevZero() else SerialPort(File(device))
     io.use { serialPort ->
         (serialPort as? SerialPort)?.configure()
-        val client: RenogyClient = if (isDummy) DummyRenogyClient() else RenogyModbusClient(serialPort)
+        val utc2 = utc == true
+        val client: RenogyClient = if (isDummy) DummyRenogyClient(utc2) else RenogyModbusClient(serialPort, utc = utc2)
 
         if (status == true) {
             val allData: RenogyData = client.getAllData()
