@@ -2,8 +2,6 @@
 
 import utils.*
 import kotlin.random.Random
-import kotlin.system.getTimeMillis
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.ExperimentalTime
 
 /**
@@ -47,7 +45,7 @@ class DummyRenogyClient(val utc: Boolean) : RenogyClient {
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData {
         val systemInfo = cachedSystemInfo ?: getSystemInfo()
-        val now: LocalDateTime = LocalDateTime.now(utc)
+        val now: LocalDateTime = LocalDateTime.now() // always local date since we calculate the generation percentage off it.
 
         // generate dummy power data flowing from the solar panels; calculate the rest of the values
         val solarPanelVoltage = Random.nextFloat(maxSolarPanelVoltage * 0.66f, maxSolarPanelVoltage)
@@ -82,7 +80,13 @@ class DummyRenogyClient(val utc: Boolean) : RenogyClient {
         val dummyDailyStats = getDailyStats()
         val dummyHistoricalData = getHistoricalData()
         val dummyStatus = RenogyStatus(false, 0.toUByte(), ChargingState.MpptChargingMode, setOf())
-        val dummyRenogyData = RenogyData(now, systemInfo, dummyPowerStatus, dummyDailyStats, dummyHistoricalData, dummyStatus)
+        val dummyRenogyData = RenogyData(
+            if (utc) LocalDateTime.now(true) else now,
+            systemInfo,
+            dummyPowerStatus,
+            dummyDailyStats,
+            dummyHistoricalData,
+            dummyStatus)
         return dummyRenogyData
     }
 
