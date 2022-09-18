@@ -42,7 +42,8 @@ kotlin {
         val nativeMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
+                // bring back once they start supporting linuxArm: https://github.com/Kotlin/kotlinx-cli/issues/89
+//                implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
             }
         }
         val nativeTest by getting
