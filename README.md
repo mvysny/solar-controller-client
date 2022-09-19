@@ -177,6 +177,9 @@ The following columns are available:
 21|Faults|text|0||0
 ```
 
+Use the [Sqlite Grafana plugin](https://grafana.com/grafana/plugins/frser-sqlite-datasource/)
+to allow Grafana to read the Sqlite database.
+
 ## Dummy Renogy Device
 
 Use `dummy` instead
