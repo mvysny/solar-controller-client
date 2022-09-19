@@ -109,6 +109,7 @@ data class LocalDate(val year: Int, val month: Int, val day: Int) : Comparable<L
      * Formats the date in yyyy-MM-dd
      */
     fun format(): String = "$year-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
+    override fun toString(): String = format()
 
     companion object {
         fun today(): LocalDate = LocalDateTime.now().date
@@ -146,6 +147,7 @@ data class LocalTime(val hour: Int, val minute: Int, val second: Int) : Comparab
      * Formats the date+time in the form of `HH:mm:ss`.
      */
     fun format(): String = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}"
+    override fun toString(): String = format()
 
     companion object {
         fun now(): LocalTime = LocalDateTime.now().time
@@ -170,9 +172,11 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
     override fun compareTo(other: LocalDateTime): Int = compareValuesBy(this, other, { it.date }, { it.time })
 
     /**
-     * Formats the date+time in the form of `yyyy-MM-dd HH:mm:ss`.
+     * Formats the date+time in the form of `yyyy-MM-ddTHH:mm:ss`.
      */
-    fun format(): String = "${date.format()} ${time.format()}"
+    fun format(): String = "${date.format()}T${time.format()}"
+    override fun toString(): String = format()
+
     companion object {
         /**
          * Returns the current date+time in user's local time zone.
@@ -188,14 +192,14 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
             return LocalDateTime(date, time)
         }
 
-        private val FORMAT_PATTERN = Regex("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) (\\d\\d):(\\d\\d):(\\d\\d)")
+        private val FORMAT_PATTERN = Regex("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)")
         /**
          * Parses the value produced by [format].
-         * @param formatted in the form of `yyyy-MM-dd HH:mm:ss`.
+         * @param formatted in the form of `yyyy-MM-ddTHH:mm:ss`.
          */
         fun parse(formatted: String): LocalDateTime {
             val result = FORMAT_PATTERN.matchEntire(formatted)
-            requireNotNull(result) { "parsed string must be in the format of yyyy-MM-dd HH:mm:ss but got $formatted" }
+            requireNotNull(result) { "parsed string must be in the format of yyyy-MM-ddTHH:mm:ss but got $formatted" }
             val date = LocalDate(
                 result.groupValues[1].toInt(),
                 result.groupValues[2].toInt(),
@@ -216,7 +220,8 @@ data class ZonedDateTime(val dateTime: LocalDateTime, val zone: ZoneId) {
     /**
      * Formats the date+time in RFC 3339 `yyyy-MM-ddTHH:mm:ssZ`.
      */
-    fun format(): String = "${dateTime.date.format()}T${dateTime.time.format()}Z"
+    fun format(): String = "${dateTime.format()}Z"
+    override fun toString(): String = format()
 
     companion object {
         /**
