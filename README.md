@@ -133,6 +133,10 @@ The CSV file contains the same fields, in a tabular form:
 You can install Grafana and the Grafana CSV plugin, to visualize the CSV file as
 a nice set of charts.
 
+> WARNING: CSV file will get big over time: 0,5mb logged per day, 180mb file over a year.
+> Grafana WILL spend lots of CPU to parse the CSV file. Only use CSV for initial testing;
+> don't use for regular use.
+
 ## Sqlite
 
 The CSV file tends to grow quite quickly. If you intend to use this tool with Grafana,
