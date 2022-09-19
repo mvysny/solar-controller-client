@@ -62,18 +62,35 @@ interface IO : Closeable {
     }
 
     /**
+     * Reads at least one byte from the underlying IO. Populates [bytes] at given [offset] and [length].
+     * Blocks until at least one byte has been retrieved.
+     * @param
+     */
+    fun read(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size): Int
+
+    /**
      * Reads all [bytes] from the underlying IO. Blocks until the byte array is fully populated.
      * Does nothing if the array is empty.
      */
-    fun read(bytes: ByteArray)
+    fun readFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
+        require(offset in bytes.indices) { "offset: out of bounds $offset, must be ${bytes.indices}" }
+        require(length >= 0) { "length must be 0 or greater but was $length" }
+        require((offset + length - 1) in bytes.indices) { "length: out of bounds $offset+$length, must be ${bytes.indices}" }
+
+        var current = offset
+        while (current < offset + length) {
+            val bytesRead: Int = read(bytes, current, length - (current - offset))
+            current += bytesRead
+        }
+    }
 
     /**
      * Reads [noBytes] and returns it in a newly allocated byte array.
      */
-    fun readBytes(noBytes: Int): ByteArray {
+    fun readFully(noBytes: Int): ByteArray {
         require(noBytes >= 0) { "$noBytes: must be 0 or higher" }
         val bytes = ByteArray(noBytes)
-        read(bytes)
+        readFully(bytes)
         return bytes
     }
 
@@ -130,18 +147,19 @@ open class FDIO(protected val fd: Int) : IO {
         }
     }
 
-    override fun read(bytes: ByteArray) {
-        var current = 0
-        while (current < bytes.size) {
-            bytes.usePinned { pinned ->
-                val bytesRead: Long = checkNativeNonNegativeLong("read") {
-                    read(fd, pinned.addressOf(current), (bytes.size - current).toULong())
-                }
-                current += bytesRead.toInt()
-                if (bytesRead == 0L) {
-                    throw EOFException("EOF")
-                }
+    override fun read(bytes: ByteArray, offset: Int, length: Int): Int {
+        require(offset in bytes.indices) { "offset: out of bounds $offset, must be ${bytes.indices}" }
+        require(length > 0) { "length must be 1 or greater but was $length" }
+        require((offset+length-1) in bytes.indices) { "length: out of bounds $offset+$length, must be ${bytes.indices}" }
+
+        return bytes.usePinned { pinned ->
+            val bytesRead: Long = checkNativeNonNegativeLong("read") {
+                read(fd, pinned.addressOf(offset), length.toULong())
             }
+            if (bytesRead == 0L) {
+                throw EOFException("EOF")
+            }
+            bytesRead.toInt()
         }
     }
 
@@ -234,8 +252,9 @@ class DevZero: IO {
         return length
     }
 
-    override fun read(bytes: ByteArray) {
-        bytes.fill(0.toByte())
+    override fun read(bytes: ByteArray, offset: Int, length: Int): Int {
+        bytes.fill(0.toByte(), offset, offset + length)
+        return length
     }
 
     override fun close() {}

@@ -3,7 +3,7 @@ package utils
 import kotlin.test.expect
 
 /**
- * A memory buffer, stores all written bytes to [writtenBytes]; [read] will offer
+ * A memory buffer, stores all written bytes to [writtenBytes]; [readFully] will offer
  * bytes from [toReturn].
  */
 class Buffer : IO {
@@ -12,20 +12,27 @@ class Buffer : IO {
     val toReturn = mutableListOf<Byte>()
 
     /**
-     * The current read pointer; next call to [read] will return byte from [toReturn]
-     * at this index. Automatically increased as [read] is called further.
+     * The current read pointer; next call to [readFully] will return byte from [toReturn]
+     * at this index. Automatically increased as [readFully] is called further.
      */
     var readPointer = 0
 
-    override fun write(bytes: ByteArray) {
-        writtenBytes.addAll(bytes.toList())
+    override fun write(bytes: ByteArray, offset: Int, length: Int): Int {
+        writtenBytes.addAll(bytes.toList().subList(offset, offset + length))
+        return length
     }
 
-    override fun read(bytes: ByteArray) {
-        require(readPointer + bytes.size <= toReturn.size) { "asked to read ${bytes.size} but there's not enough data in $this" }
-        for (index: Int in bytes.indices) {
+    override fun read(bytes: ByteArray, offset: Int, length: Int): Int {
+        require(readPointer < toReturn.size) { "EOF" }
+        var bytesRead = 0
+        for (index: Int in offset until offset+length) {
+            if (readPointer >= toReturn.size) {
+                return bytesRead
+            }
             bytes[index] = toReturn[readPointer++]
+            bytesRead++
         }
+        return bytesRead
     }
 
     override fun close() {}
