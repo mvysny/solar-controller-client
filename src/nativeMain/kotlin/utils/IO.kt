@@ -64,7 +64,8 @@ interface IO : Closeable {
     /**
      * Reads at least one byte from the underlying IO. Populates [bytes] at given [offset] and [length].
      * Blocks until at least one byte has been retrieved.
-     * @param
+     * @param length must be 1 or more
+     * @return 1 or more - the number of bytes actually read and stored into [bytes].
      */
     fun read(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size): Int
 
@@ -80,6 +81,7 @@ interface IO : Closeable {
         var current = offset
         while (current < offset + length) {
             val bytesRead: Int = read(bytes, current, length - (current - offset))
+            check(bytesRead > 0) { "read should return 1+ but returned $bytesRead" }
             current += bytesRead
         }
     }
