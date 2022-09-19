@@ -151,7 +151,7 @@ $ sqlite3 log.db "select * from log" -csv
 1663607571,92,28.128708,0.0,23,19,41.469673,0.0,0,26.666447,28.293612,0.0,0,0.0,0.0,1,0,0,0,0.0,MpptChargingMode,
 ```
 
-The following columns are available:
+The following columns are available in the `log` database table:
 ```
 0|DateTime|integer|1||1
 1|BatterySOC|integer|1||0
