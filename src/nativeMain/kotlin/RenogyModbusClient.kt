@@ -19,7 +19,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
         val crc = CRC16Modbus()
         crc.update(request, 0, 6)
         request.setUShortAt(6, crc.crc) // for CRC, low byte is sent first, then the high byte.
-        io.write(request)
+        io.writeFully(request)
 
         // read response
         val responseHeader = io.readBytes(3)

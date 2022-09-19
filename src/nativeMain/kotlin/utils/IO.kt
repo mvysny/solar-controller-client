@@ -37,8 +37,10 @@ fun <C: Closeable, R> C.use(block: (C) -> R): R {
  */
 interface IO : Closeable {
     /**
-     * Writes a subarray of [bytes] denoted by [offset] and [length]. Blocks until at least one byte is written.
-     * Does nothing if length is empty.
+     * Tries to write a subarray of [bytes] denoted by [offset] and [length]. Blocks until at least one byte is written.
+     * Fails if length is 0.
+     *
+     * You most probably want to call [writeFully].
      * @return the actual number of bytes written, 1 or greater.
      */
     fun write(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size): Int
@@ -75,12 +77,12 @@ interface IO : Closeable {
     }
 
     fun write(line: String) {
-        write(line.encodeToByteArray())
+        writeFully(line.encodeToByteArray())
     }
 
     fun writeln(line: String) {
         write(line)
-        write(byteArrayOf('\n'.code.toByte()))
+        writeFully(byteArrayOf('\n'.code.toByte()))
     }
 }
 
@@ -100,10 +102,10 @@ data class File(val pathname: String) {
     fun openOverwrite(mode: Int = rwrwr): IO = IOFile(this, O_WRONLY or O_TRUNC or O_CREAT, mode)
     fun openRead(): IO = IOFile(this, O_RDONLY)
     fun writeContents(contents: String) {
-        openOverwrite().use { file -> file.write(contents.encodeToByteArray()) }
+        openOverwrite().use { file -> file.writeFully(contents.encodeToByteArray()) }
     }
     fun appendContents(contents: String) {
-        openAppend().use { file -> file.write(contents.encodeToByteArray()) }
+        openAppend().use { file -> file.writeFully(contents.encodeToByteArray()) }
     }
     fun exists(): Boolean {
         val result = access(pathname, F_OK)
