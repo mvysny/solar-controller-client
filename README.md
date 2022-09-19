@@ -7,7 +7,8 @@ Licensed under the MIT license.
 ## Intended use
 
 Intended to be running on a Raspberry PI. The Raspberry PI needs to be connected over USB/RS232 adapter
-to a RS232/RJ12 port of Renogy Rover. This program will periodically append newest data to a CSV file,
+to a RS232/RJ12 port of Renogy Rover. This program will periodically show the newest data on screen,
+or optionally append the newest data to a CSV file,
 which you can inspect to see the performance of your solar array.
 
 For exact instructions on how to connect Renogy Rover RS232/RJ12 over an USB adapter to your Raspberry PI, please see
@@ -58,7 +59,7 @@ $ solar-controller-client.kexe /dev/ttyUSB0 --status
 That will cause the app will only print status and quit. To continuously poll the device for data, run
 
 ```bash
-$ solar-controller-client.kexe /dev/ttyUSB0
+$ solar-controller-client.kexe /dev/ttyUSB0 --csv log.csv --utc
 ```
 
 The program will overwrite `status.json` file with the new data polled from the device;
@@ -122,7 +123,29 @@ The status JSON example:
 }
 ```
 
-The CSV file contains the same fields, in a tabular form.
+The CSV file contains the same fields, in a tabular form:
+```csv
+"DateTime","BatterySOC","BatteryVoltage","ChargingCurrentToBattery","BatteryTemp","ControllerTemp","SolarPanelVoltage","SolarPanelCurrent","SolarPanelPower","Daily.BatteryMinVoltage","Daily.BatteryMaxVoltage","Daily.MaxChargingCurrent","Daily.MaxChargingPower","Daily.ChargingAmpHours","Daily.PowerGeneration","Stats.DaysUp","Stats.BatteryOverDischargeCount","Stats.BatteryFullChargeCount","Stats.TotalChargingBatteryAH","Stats.CumulativePowerGenerationWH","ChargingState","Faults"
+"2022-09-19T13:48:53Z",73,24.19,4.23,23,18,42.04,2.44,102,24.19,24.19,4.23,102,0.00,0.00,1,0,0,0,0.00,"MpptChargingMode",""
+"2022-09-19T13:49:03Z",93,28.11,4.76,21,21,56.71,2.36,133,24.19,28.11,4.76,133,0.01,0.37,1,0,0,0,0.37,"MpptChargingMode",""
+```
+
+You can install Grafana and the Grafana CSV plugin, to visualize the CSV file as
+a nice set of charts.
+
+## Sqlite
+
+The CSV file tends to grow quite quickly. If you intend to use this tool with Grafana,
+it's far better to output the data to the sqlite database:
+
+```bash
+$ solar-controller-client.kexe /dev/ttyUSB0 --sqlite renogystats.db
+```
+
+The database looks like the following:
+```
+TODO
+```
 
 ## Dummy Renogy Device
 
