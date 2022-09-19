@@ -45,65 +45,67 @@ interface IO : Closeable {
      * @return the actual number of bytes written, 1 or greater.
      */
     fun write(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size): Int
-    /**
-     * Writes all [bytes] to the underlying IO. Blocks until the bytes are written.
-     * Does nothing if the array is empty.
-     */
-    fun writeFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
-        if (length == 0) {
-            return
-        }
-        var current = offset
-        while (current < offset + length) {
-            val bytesWritten = write(bytes, current, length - (current - offset))
-            check(bytesWritten > 0) { "write returned $bytesWritten" }
-            current += bytesWritten
-        }
-    }
 
     /**
      * Reads at least one byte from the underlying IO. Populates [bytes] at given [offset] and [length].
      * Blocks until at least one byte has been retrieved.
      * @param length must be 1 or more
-     * @return 1 or more - the number of bytes actually read and stored into [bytes].
+     * @return 1 or more - the number of bytes actually read and stored into [bytes]. Not more than [length].
      */
     fun read(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size): Int
+}
 
-    /**
-     * Reads all [bytes] from the underlying IO. Blocks until the byte array is fully populated.
-     * Does nothing if the array is empty.
-     */
-    fun readFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
-        require(offset in bytes.indices) { "offset: out of bounds $offset, must be ${bytes.indices}" }
-        require(length >= 0) { "length must be 0 or greater but was $length" }
-        require((offset + length - 1) in bytes.indices) { "length: out of bounds $offset+$length, must be ${bytes.indices}" }
-
-        var current = offset
-        while (current < offset + length) {
-            val bytesRead: Int = read(bytes, current, length - (current - offset))
-            check(bytesRead > 0) { "read should return 1+ but returned $bytesRead" }
-            current += bytesRead
-        }
+/**
+ * Writes all [bytes] to the underlying IO. Blocks until the bytes are written.
+ * Does nothing if the array is empty.
+ */
+fun IO.writeFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
+    if (length == 0) {
+        return
     }
-
-    /**
-     * Reads [noBytes] and returns it in a newly allocated byte array.
-     */
-    fun readFully(noBytes: Int): ByteArray {
-        require(noBytes >= 0) { "$noBytes: must be 0 or higher" }
-        val bytes = ByteArray(noBytes)
-        readFully(bytes)
-        return bytes
+    var current = offset
+    while (current < offset + length) {
+        val bytesWritten = write(bytes, current, length - (current - offset))
+        check(bytesWritten > 0) { "write returned $bytesWritten" }
+        current += bytesWritten
     }
+}
 
-    fun write(line: String) {
-        writeFully(line.encodeToByteArray())
-    }
 
-    fun writeln(line: String) {
-        write(line)
-        writeFully(byteArrayOf('\n'.code.toByte()))
+/**
+ * Reads all [bytes] from the underlying IO. Blocks until the byte array is fully populated.
+ * Does nothing if the array is empty.
+ */
+fun IO.readFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
+    require(offset in bytes.indices) { "offset: out of bounds $offset, must be ${bytes.indices}" }
+    require(length >= 0) { "length must be 0 or greater but was $length" }
+    require((offset + length - 1) in bytes.indices) { "length: out of bounds $offset+$length, must be ${bytes.indices}" }
+
+    var current = offset
+    while (current < offset + length) {
+        val bytesRead: Int = read(bytes, current, length - (current - offset))
+        check(bytesRead > 0) { "read should return 1+ but returned $bytesRead" }
+        current += bytesRead
     }
+}
+
+/**
+ * Reads [noBytes] and returns it in a newly allocated byte array.
+ */
+fun IO.readFully(noBytes: Int): ByteArray {
+    require(noBytes >= 0) { "$noBytes: must be 0 or higher" }
+    val bytes = ByteArray(noBytes)
+    readFully(bytes)
+    return bytes
+}
+
+fun IO.write(line: String) {
+    writeFully(line.encodeToByteArray())
+}
+
+fun IO.writeln(line: String) {
+    write(line)
+    writeFully(byteArrayOf('\n'.code.toByte()))
 }
 
 /**
@@ -133,6 +135,8 @@ data class File(val pathname: String) {
         if (errno == ENOENT) return false
         iofail("access")
     }
+
+    override fun toString(): String = "File($pathname)"
 }
 
 open class FDIO(protected val fd: Int) : IO {
@@ -170,11 +174,17 @@ open class FDIO(protected val fd: Int) : IO {
     }
 }
 
+/**
+ * STDOUT.
+ */
 object StdoutIO : FDIO(1) {
     override fun close() {}
     override fun toString(): String = "StdoutIO"
 }
 
+/**
+ * STDERR.
+ */
 object StderrIO : FDIO(2) {
     override fun close() {}
     override fun toString(): String = "StderrIO"
