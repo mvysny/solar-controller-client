@@ -37,10 +37,27 @@ fun <C: Closeable, R> C.use(block: (C) -> R): R {
  */
 interface IO : Closeable {
     /**
+     * Writes a subarray of [bytes] denoted by [offset] and [length]. Blocks until at least one byte is written.
+     * Does nothing if length is empty.
+     * @return the actual number of bytes written, 1 or greater.
+     */
+    fun write(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size): Int
+    /**
      * Writes all [bytes] to the underlying IO. Blocks until the bytes are written.
      * Does nothing if the array is empty.
      */
-    fun write(bytes: ByteArray)
+    fun writeFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
+        if (length == 0) {
+            return
+        }
+        var current = offset
+        while (current < offset + length) {
+            val bytesWritten = write(bytes, current, length - (current - offset))
+            check(bytesWritten > 0) { "write returned $bytesWritten" }
+            current += bytesWritten
+        }
+    }
+
     /**
      * Reads all [bytes] from the underlying IO. Blocks until the byte array is fully populated.
      * Does nothing if the array is empty.
@@ -96,26 +113,17 @@ data class File(val pathname: String) {
     }
 }
 
-/**
- * Reads/writes from/to a file with given [file].
- * @param oflag the open file flag, one of `O_*` constants. Most useful combos:
- * `O_WRONLY or O_TRUNC or O_CREAT` overwrites the file with a zero-sized one;
- * `O_WRONLY or O_APPEND or O_CREAT` starts writing at the end of the file, creating it if necessary;
- * `O_RDWR` - opens the file for read/write; the file must exist.
- * @param mode the file mode when it's created, e.g. `S_IRWXU`.
- */
-open class IOFile(val file: File, oflag: Int = O_RDWR, mode: Int = 0) : IO, Closeable {
-    protected val fd: Int = checkNativeNonNegative("open $file") { open(file.pathname, oflag, mode) }
+open class FDIO(protected val fd: Int) : IO {
+    override fun write(bytes: ByteArray, offset: Int, length: Int): Int {
+        require(offset in bytes.indices) { "offset: out of bounds $offset, must be ${bytes.indices}" }
+        require(length > 0) { "length must be 1 or greater but was $length" }
+        require((offset+length-1) in bytes.indices) { "length: out of bounds $offset+$length, must be ${bytes.indices}" }
 
-    override fun write(bytes: ByteArray) {
-        var current = 0
-        while (current < bytes.size) {
-            bytes.usePinned { pinned ->
-                val bytesWritten: Long = checkNativeNonNegativeLong("write") {
-                    write(fd, pinned.addressOf(current), (bytes.size - current).toULong())
-                }
-                current += bytesWritten.toInt()
+        return bytes.usePinned { pinned ->
+            val bytesWritten: Long = checkNativeNonNegativeLong("write") {
+                write(fd, pinned.addressOf(offset), length.toULong())
             }
+            bytesWritten.toInt()
         }
     }
 
@@ -137,7 +145,22 @@ open class IOFile(val file: File, oflag: Int = O_RDWR, mode: Int = 0) : IO, Clos
     override fun close() {
         checkNativeZero("close") { close(fd) }
     }
+}
 
+object StdoutIO : FDIO(1) {
+    override fun close() {}
+    override fun toString(): String = "StdoutIO"
+}
+
+/**
+ * Reads/writes from/to a file with given [file].
+ * @param oflag the open file flag, one of `O_*` constants. Most useful combos:
+ * `O_WRONLY or O_TRUNC or O_CREAT` overwrites the file with a zero-sized one;
+ * `O_WRONLY or O_APPEND or O_CREAT` starts writing at the end of the file, creating it if necessary;
+ * `O_RDWR` - opens the file for read/write; the file must exist.
+ * @param mode the file mode when it's created, e.g. `S_IRWXU`.
+ */
+open class IOFile(val file: File, oflag: Int = O_RDWR, mode: Int = 0) : FDIO(checkNativeNonNegative("open $file") { open(file.pathname, oflag, mode) }) {
     override fun toString(): String = "IOFile($file)"
 }
 
@@ -198,7 +221,10 @@ private val rwrwr = S_IRUSR or S_IWUSR or S_IRGRP or S_IWGRP or S_IROTH
  * All written bytes are thrown away; provides an endless stream of zeroes as input.
  */
 class DevZero: IO {
-    override fun write(bytes: ByteArray) {}
+    override fun write(bytes: ByteArray, offset: Int, length: Int): Int {
+        // throw away
+        return length
+    }
 
     override fun read(bytes: ByteArray) {
         bytes.fill(0.toByte())
