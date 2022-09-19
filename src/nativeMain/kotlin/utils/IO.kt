@@ -17,7 +17,8 @@ fun Closeable.closeQuietly() {
     try {
         close()
     } catch (e: Exception) {
-        eprintln("$this: close failed: $e")
+        StderrIO.writeln("$this: close failed: $e")
+        e.printStackTrace()
     }
 }
 
@@ -152,6 +153,11 @@ open class FDIO(protected val fd: Int) : IO {
 object StdoutIO : FDIO(1) {
     override fun close() {}
     override fun toString(): String = "StdoutIO"
+}
+
+object StderrIO : FDIO(2) {
+    override fun close() {}
+    override fun toString(): String = "StderrIO"
 }
 
 /**

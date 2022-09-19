@@ -110,16 +110,6 @@ inline fun ByteArray.getUIntHiLoAt(index: Int): UInt {
     return result
 }
 
-private val STDERR = fdopen(2, "w")
-
-/**
- * Prints [message] to utils.STDERR.
- */
-fun eprintln(message: String) {
-    fprintf(STDERR, "%s\n", message)
-    fflush(STDERR)
-}
-
 fun Random.nextFloat(from: Float, to: Float): Float =
     nextDouble(from.toDouble(), to.toDouble()).toFloat()
 
