@@ -8,6 +8,7 @@ fun main(args: Array<String>) {
     val status by parser.option(ArgType.Boolean, fullName = "status", description = "print the Renogy Rover status as JSON to stdout and quit")
     val utc by parser.option(ArgType.Boolean, fullName = "utc", description = "dump date in UTC instead of local, handy for Grafana")
     val csv by parser.option(ArgType.String, fullName = "csv", description = "appends status to a CSV file, disables stdout status logging")
+    val sqlite by parser.option(ArgType.String, fullName = "sqlite", description = "appends status to a sqlite database, disables stdout status logging")
     val statefile by parser.option(ArgType.String, fullName = "statefile", description = "overwrites status to file other than the default 'status.json'")
     val pollingInterval by parser.option(ArgType.Int, fullName = "pollinginterval", shortName = "i", description = "in seconds: how frequently to poll the controller for data, defaults to 10")
     parser.parse(args)
@@ -17,6 +18,10 @@ fun main(args: Array<String>) {
     if (csv != null) {
         dataLoggers.removeAll { it is StdoutCSVDataLogger }
         dataLoggers.add(CSVDataLogger(File(csv!!), utc2))
+    }
+    if (sqlite != null) {
+        dataLoggers.removeAll { it is StdoutCSVDataLogger }
+        dataLoggers.add(SqliteDataLogger(File(sqlite!!)))
     }
 
     val isDummy = device == "dummy"

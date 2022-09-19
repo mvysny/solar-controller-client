@@ -104,3 +104,80 @@ class StdoutCSVDataLogger(val utc: Boolean) : DataLogger {
         return "StdoutCSVDataLogger(utc=$utc)"
     }
 }
+
+class SqliteDataLogger(val file: File) : DataLogger {
+    private fun sql(sql: String) {
+        exec("sqlite3 ${file.pathname} \"$sql\"")
+    }
+    override fun init() {
+        if (!file.exists()) {
+            sql("create table log(" +
+                    "DateTime integer primary key not null," +
+                    "BatterySOC integer not null," +
+                    "BatteryVoltage real not null," +
+                    "ChargingCurrentToBattery real not null," +
+                    "BatteryTemp int not null," +
+                    "ControllerTemp int not null," +
+                    "SolarPanelVoltage real not null," +
+                    "SolarPanelCurrent real not null," +
+                    "SolarPanelPower int not null," +
+                    "Daily_BatteryMinVoltage real not null," +
+                    "Daily_BatteryMaxVoltage real not null," +
+                    "Daily_MaxChargingCurrent real not null," +
+                    "Daily_MaxChargingPower int not null," +
+                    "Daily_ChargingAmpHours real not null," +
+                    "Daily_PowerGeneration real not null," +
+                    "Stats_DaysUp int not null," +
+                    "Stats_BatteryOverDischargeCount int not null," +
+                    "Stats_BatteryFullChargeCount int not null," +
+                    "Stats_TotalChargingBatteryAH int not null," +
+                    "Stats_CumulativePowerGenerationWH real not null," +
+                    "ChargingState text," +
+                    "Faults text)")
+        }
+    }
+
+    override fun append(data: RenogyData) {
+        val cols = mutableListOf<String>()
+        val values = mutableListOf<String>()
+
+        fun add(col: String, value: Any?) {
+            if (value != null) {
+                cols.add(col)
+                values.add(
+                    when (value) {
+                        is Number, is UShort, is UInt -> value.toString()
+                        else -> "'$value'"
+                    }
+                )
+            }
+        }
+
+        add("DateTime", getSecondsSinceEpoch())
+        add("BatterySOC", data.powerStatus.batterySOC)
+        add("BatteryVoltage", data.powerStatus.batteryVoltage)
+        add("ChargingCurrentToBattery", data.powerStatus.chargingCurrentToBattery)
+        add("BatteryTemp", data.powerStatus.batteryTemp)
+        add("ControllerTemp", data.powerStatus.controllerTemp)
+        add("SolarPanelVoltage", data.powerStatus.solarPanelVoltage)
+        add("SolarPanelCurrent", data.powerStatus.solarPanelCurrent)
+        add("SolarPanelPower", data.powerStatus.solarPanelPower)
+        add("Daily_BatteryMinVoltage", data.dailyStats.batteryMinVoltage)
+        add("Daily_BatteryMaxVoltage", data.dailyStats.batteryMaxVoltage)
+        add("Daily_MaxChargingCurrent", data.dailyStats.maxChargingCurrent)
+        add("Daily_MaxChargingPower", data.dailyStats.maxChargingPower)
+        add("Daily_ChargingAmpHours", data.dailyStats.chargingAmpHours)
+        add("Daily_PowerGeneration", data.dailyStats.powerGeneration)
+        add("Stats_DaysUp", data.historicalData.daysUp)
+        add("Stats_BatteryOverDischargeCount", data.historicalData.batteryOverDischargeCount)
+        add("Stats_BatteryFullChargeCount", data.historicalData.batteryFullChargeCount)
+        add("Stats_TotalChargingBatteryAH", data.historicalData.totalChargingBatteryAH)
+        add("Stats_CumulativePowerGenerationWH", data.historicalData.cumulativePowerGenerationWH)
+        add("ChargingState", data.status.chargingState?.name)
+        add("Faults", data.status.faults.joinToString(",") { it.name } .ifBlank { null })
+
+        sql("insert or replace into log (${cols.joinToString(",")}) values (${values.joinToString(",")})")
+    }
+
+    override fun toString(): String = "SqliteDataLogger(file=$file)"
+}

@@ -120,3 +120,32 @@ fun Float.toString2Decimals(): String {
     val string = (this * 100f).roundToInt().toString().padStart(3, '0')
     return "${string.dropLast(2)}.${string.takeLast(2)}"
 }
+
+/**
+ * Executes given command. On success returns the command stdout; on error fails with an informative
+ */
+fun exec(command: String, redirectStderr: Boolean = true): String {
+    val commandToExecute = if (redirectStderr) "$command 2>&1" else command
+    val fp = checkNativeNotNull("popen $command") { popen(commandToExecute, "r") }
+    val processStdout = StringBuilder()
+    try {
+        val buffer = ByteArray(4096)
+        buffer.usePinned {
+            while (true) {
+                val input = fgets(it.addressOf(0), buffer.size, fp) ?: break
+                if (errno != 0) {
+                    iofail("fgets")
+                }
+                processStdout.append(input.toKString())
+            }
+        }
+        return processStdout.toString().trim()
+    } finally {
+        val status = pclose(fp)
+        if (status < 0) {
+            iofail("pclose")
+        } else if (status > 0) {
+            throw IOException("Command `$command` failed with status $status: ${processStdout.toString().trim()}")
+        }
+    }
+}

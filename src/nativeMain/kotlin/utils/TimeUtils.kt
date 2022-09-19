@@ -182,8 +182,7 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
          * Returns the current date+time in user's local time zone.
          */
         fun now(): LocalDateTime {
-            // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC). -1 or negative value means error.
-            val t: Long = checkNativeNonNegativeLong("time") { time(null) }
+            val t: Long = getSecondsSinceEpoch()
             // localtime() returns a pointer to static data and hence is not thread-safe. NULL means error.
             val tm: tm = checkNativeNotNull("localtime") { localtime(cValuesOf(t)) } .pointed
 
@@ -228,8 +227,7 @@ data class ZonedDateTime(val dateTime: LocalDateTime, val zone: ZoneId) {
          * Returns the current date+time in user local time zone, or alternatively in UTC if [utc] is true.
          */
         fun now(zone: ZoneId = ZoneId.UTC): ZonedDateTime {
-            // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC). -1 or negative value means error.
-            val t: Long = checkNativeNonNegativeLong("time") { time(null) }
+            val t: Long = getSecondsSinceEpoch()
             // localtime() returns a pointer to static data and hence is not thread-safe. NULL means error.
             val tm: tm = checkNativeNotNull("gmtime") { gmtime(cValuesOf(t)) } .pointed
 
@@ -317,6 +315,11 @@ value class Instant private constructor(private val millis: Long) : Comparable<I
     companion object {
         fun now(): Instant = Instant(getTimeMillis())
     }
+}
+
+fun getSecondsSinceEpoch(): Long {
+    // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC). -1 or negative value means error.
+    return checkNativeNonNegativeLong("time") { time(null) }
 }
 
 fun String.toLocalTime() = LocalTime.parse(this)

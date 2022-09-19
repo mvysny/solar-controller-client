@@ -136,7 +136,8 @@ a nice set of charts.
 ## Sqlite
 
 The CSV file tends to grow quite quickly. If you intend to use this tool with Grafana,
-it's far better to output the data to the sqlite database:
+it's far better to output the data to the sqlite database. This requires the `sqlite3`
+program installed, simply install it via `sudo apt install sqlite3`.
 
 ```bash
 $ solar-controller-client.kexe /dev/ttyUSB0 --sqlite renogystats.db
@@ -144,12 +145,42 @@ $ solar-controller-client.kexe /dev/ttyUSB0 --sqlite renogystats.db
 
 The database looks like the following:
 ```
-TODO
+$ sqlite3 log.db "select * from log" -csv
+1663607551,95,28.293612,0.0,20,19,55.478622,0.0,0,28.293612,28.293612,0.0,0,0.0,0.0,1,0,0,0,0.0,MpptChargingMode,
+1663607561,78,26.666447,0.0,19,22,40.515778,0.0,0,26.666447,28.293612,0.0,0,0.0,0.0,1,0,0,0,0.0,MpptChargingMode,
+1663607571,92,28.128708,0.0,23,19,41.469673,0.0,0,26.666447,28.293612,0.0,0,0.0,0.0,1,0,0,0,0.0,MpptChargingMode,
+```
+
+The following columns are available:
+```
+0|DateTime|integer|1||1
+1|BatterySOC|integer|1||0
+2|BatteryVoltage|real|1||0
+3|ChargingCurrentToBattery|real|1||0
+4|BatteryTemp|int|1||0
+5|ControllerTemp|int|1||0
+6|SolarPanelVoltage|real|1||0
+7|SolarPanelCurrent|real|1||0
+8|SolarPanelPower|int|1||0
+9|Daily_BatteryMinVoltage|real|1||0
+10|Daily_BatteryMaxVoltage|real|1||0
+11|Daily_MaxChargingCurrent|real|1||0
+12|Daily_MaxChargingPower|int|1||0
+13|Daily_ChargingAmpHours|real|1||0
+14|Daily_PowerGeneration|real|1||0
+15|Stats_DaysUp|int|1||0
+16|Stats_BatteryOverDischargeCount|int|1||0
+17|Stats_BatteryFullChargeCount|int|1||0
+18|Stats_TotalChargingBatteryAH|int|1||0
+19|Stats_CumulativePowerGenerationWH|real|1||0
+20|ChargingState|text|0||0
+21|Faults|text|0||0
 ```
 
 ## Dummy Renogy Device
 
-Use `dummy` instead of the device name. This will create a dummy renogy device and poll data off it:
+Use `dummy` instead
+of the device name. This will create a dummy renogy device and poll data off it:
 
 ```bash
 $ solar-controller-client.kexe dummy
