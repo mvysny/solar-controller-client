@@ -50,7 +50,7 @@ interface IO : Closeable {
      * Reads at least one byte from the underlying IO. Populates [bytes] at given [offset] and [length].
      * Blocks until at least one byte has been retrieved.
      * @param length must be 1 or more
-     * @return 1 or more - the number of bytes actually read and stored into [bytes]. Not more than [length].
+     * @return 1 or more - the number of bytes actually read and stored into [bytes]. Not more than [length]. -1 on EOF
      */
     fun read(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size): Int
 }
@@ -75,6 +75,7 @@ fun IO.writeFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
 /**
  * Reads all [bytes] from the underlying IO. Blocks until the byte array is fully populated.
  * Does nothing if the array is empty.
+ * @throws EOFException if we reach the end of stream during the read.
  */
 fun IO.readFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
     require(offset in bytes.indices) { "offset: out of bounds $offset, must be ${bytes.indices}" }
@@ -84,6 +85,7 @@ fun IO.readFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
     var current = offset
     while (current < offset + length) {
         val bytesRead: Int = read(bytes, current, length - (current - offset))
+        if (bytesRead < 0) throw EOFException()
         check(bytesRead > 0) { "read should return 1+ but returned $bytesRead" }
         current += bytesRead
     }
@@ -113,7 +115,7 @@ fun IO.writeln(line: String) {
  * @param errno the [platform.posix.errno] value.
  */
 open class IOException(message: String, cause: Throwable? = null, val errno: Int? = null) : Exception(message, cause)
-open class EOFException(message: String, cause: Throwable? = null) : IOException(message, cause)
+open class EOFException(message: String = "EOF", cause: Throwable? = null) : IOException(message, cause)
 open class FileNotFoundException(message: String, cause: Throwable? = null) : IOException(message, cause, 2)
 
 data class File(val pathname: String) {
@@ -163,7 +165,7 @@ open class FDIO(protected val fd: Int) : IO {
                 read(fd, pinned.addressOf(offset), length.toULong())
             }
             if (bytesRead == 0L) {
-                throw EOFException("EOF")
+                return -1
             }
             bytesRead.toInt()
         }
