@@ -138,7 +138,7 @@ a nice set of charts.
 
 > WARNING: CSV file will get big over time: 0,5mb logged per day, 180mb file over a year.
 > Grafana WILL spend lots of CPU to parse the CSV file. Only use CSV for initial testing;
-> don't use for regular use.
+> don't use for regular use. Use sqlite instead.
 
 ## Sqlite
 
@@ -147,7 +147,7 @@ it's far better to output the data to the sqlite database. This requires the `sq
 program installed, simply install it via `sudo apt install sqlite3`.
 
 ```bash
-$ solar-controller-client.kexe /dev/ttyUSB0 --sqlite renogystats.db
+$ solar-controller-client.kexe --sqlite log.db /dev/ttyUSB0
 ```
 
 The database looks like the following:
