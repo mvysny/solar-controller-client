@@ -184,6 +184,9 @@ The following columns are available in the `log` database table:
 21|Faults|text|0||0
 ```
 
+The `DateTime` column is an unix timestamp: a number of seconds since the Epoch 00:00:00 UTC on 1 January 1970.
+It's directly compatible with the "number input" timestamp of the [sqlite Grafana plugin](https://grafana.com/grafana/plugins/frser-sqlite-datasource/).
+
 Values for the `ChargingState` column:
 
 * 0 = ChargingDeactivated
