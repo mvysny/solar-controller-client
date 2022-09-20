@@ -326,3 +326,18 @@ fun String.toLocalTime() = LocalTime.parse(this)
 fun String.toLocalDate() = LocalDate.parse(this)
 fun String.toLocalDateTime() = LocalDateTime.parse(this)
 fun String.toZonedDateTime() = ZonedDateTime.parse(this)
+
+/**
+ * Runs action on midnight. Don't forget to call [tick] periodically. Beta.
+ */
+class Alarm(private val onMidnight: () -> Unit) {
+    private var today = LocalDate.today()
+
+    fun tick() {
+        val today2 = LocalDate.today()
+        if (today2 != today) {
+            today = today2
+            onMidnight()
+        }
+    }
+}

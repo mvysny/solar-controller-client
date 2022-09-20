@@ -10,10 +10,13 @@ fun main(args: Array<String>) {
     val csv by parser.option(ArgType.String, fullName = "csv", description = "appends status to a CSV file, disables stdout status logging")
     val sqlite by parser.option(ArgType.String, fullName = "sqlite", description = "appends status to a sqlite database, disables stdout status logging")
     val statefile by parser.option(ArgType.String, fullName = "statefile", description = "overwrites status to file other than the default 'status.json'")
-    val pollingInterval by parser.option(ArgType.Int, fullName = "pollinginterval", shortName = "i", description = "in seconds: how frequently to poll the controller for data, defaults to 10")
+    val pollingInterval by parser.option(ArgType.Int, fullName = "pollinterval", shortName = "i", description = "in seconds: how frequently to poll the controller for data, defaults to 10")
+    val pruneLog by parser.option(ArgType.Int, fullName = "prunelog", description = "prunes log entries older than x days, defaults to 365")
     parser.parse(args)
 
     val utc2 = utc == true
+    val pruneLog2 = pruneLog ?: 365
+    require(pruneLog2 >= 1) { "--prunelog: Expected 1 or more days, got $pruneLog2" }
     val dataLoggers = mutableListOf<DataLogger>(StdoutCSVDataLogger(utc2))
     if (csv != null) {
         dataLoggers.removeAll { it is StdoutCSVDataLogger }
@@ -39,15 +42,21 @@ fun main(args: Array<String>) {
             println("Device $systemInfo")
             val stateFile2 = File(statefile ?: "status.json")
             val pollInterval = pollingInterval ?: 10
+            require(pollInterval >= 1) { "--pollinterval: must be 1 or greater but was $pollInterval" }
             println("Polling the device every $pollInterval seconds; writing status to $stateFile2, appending data to $dataLoggers")
             println("Press CTRL+C or send SIGTERM to end the program\n")
 
-            dataLoggers.forEach { it.init() }
+            dataLoggers.forEach {
+                it.init()
+                it.deleteRecordsOlderThan(pruneLog2)
+            }
 
-            repeatEvery((pollingInterval ?: 10) * 1000L) {
+            val alarm = Alarm { dataLoggers.forEach { it.deleteRecordsOlderThan(pruneLog2) } }
+            repeatEvery(pollInterval * 1000L) {
                 val allData: RenogyData = client.getAllData(systemInfo)
                 stateFile2.writeContents(allData.toJson())
                 dataLoggers.forEach { it.append(allData) }
+                alarm.tick()
                 true
             }
         }

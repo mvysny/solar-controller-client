@@ -1,4 +1,5 @@
 import utils.*
+import kotlin.time.Duration.Companion.days
 
 /**
  * Logs [RenogyData] somewhere.
@@ -13,6 +14,11 @@ interface DataLogger {
      * Appends [data] to the logger.
      */
     fun append(data: RenogyData)
+
+    /**
+     * Deletes all records older than given number of [days].
+     */
+    fun deleteRecordsOlderThan(days: Int = 365)
 }
 
 private fun IO.csvRenogyWriteHeader() {
@@ -85,6 +91,11 @@ class CSVDataLogger(val file: File, val utc: Boolean) : DataLogger {
         file.openAppend().use { io -> io.csvRenogyWriteData(data, utc) }
     }
 
+    override fun deleteRecordsOlderThan(days: Int) {
+        // it would take too much time to process a huge CSV file; also CSV is considered experimental, so don't bother
+        StderrIO.writeln("Record cleanup not implemented for CSV")
+    }
+
     override fun toString(): String = "CSVDataLogger(file=$file, utc=$utc)"
 }
 
@@ -98,6 +109,9 @@ class StdoutCSVDataLogger(val utc: Boolean) : DataLogger {
 
     override fun append(data: RenogyData) {
         StdoutIO.csvRenogyWriteData(data, utc)
+    }
+
+    override fun deleteRecordsOlderThan(days: Int) {
     }
 
     override fun toString(): String {
@@ -177,6 +191,11 @@ class SqliteDataLogger(val file: File) : DataLogger {
         add("Faults", data.status.faults.joinToString(",") { it.name } .ifBlank { null })
 
         sql("insert or replace into log (${cols.joinToString(",")}) values (${values.joinToString(",")})")
+    }
+
+    override fun deleteRecordsOlderThan(days: Int) {
+        val deleteOlderThan = getSecondsSinceEpoch() - days.days.inWholeSeconds
+        sql("delete from log where DateTime <= $deleteOlderThan")
     }
 
     override fun toString(): String = "SqliteDataLogger(file=$file)"
