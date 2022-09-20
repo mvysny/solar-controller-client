@@ -6,10 +6,10 @@ class CSVWriter(private val io: IO) {
     }
     fun writeLine(vararg line: Any?) {
         val row = line.joinToString(",") {
-            when {
-                it == null -> ""
-                it is Float -> it.toString2Decimals()
-                it is Number || it is UShort || it is UInt -> it.toString()
+            when (it) {
+                null -> ""
+                is Float -> it.toString2Decimals()
+                is Number, is UShort, is UInt, is UByte -> it.toString()
                 else -> "\"$it\""
             }
         }

@@ -152,10 +152,10 @@ $ solar-controller-client.kexe /dev/ttyUSB0 --sqlite renogystats.db
 
 The database looks like the following:
 ```
-$ sqlite3 log.db "select * from log" -csv
-1663607551,95,28.293612,0.0,20,19,55.478622,0.0,0,28.293612,28.293612,0.0,0,0.0,0.0,1,0,0,0,0.0,MpptChargingMode,
-1663607561,78,26.666447,0.0,19,22,40.515778,0.0,0,26.666447,28.293612,0.0,0,0.0,0.0,1,0,0,0,0.0,MpptChargingMode,
-1663607571,92,28.128708,0.0,23,19,41.469673,0.0,0,26.666447,28.293612,0.0,0,0.0,0.0,1,0,0,0,0.0,MpptChargingMode,
+$ sqlite3 log.db "select * from log"
+1663650263|95|24.029585|6.9642487|19|18|59.87478|2.7949667|167|24.029585|24.029585|6.9642487|167|3.8690272e-05|0.00092971115|1|0|0|0|0.00092971115|2|
+1663650273|79|25.101372|3.1987078|23|20|42.496037|1.8893986|80|24.029585|25.101372|6.9642487|167|0.00892399|0.22396292|1|0|0|0|0.22396293|2|
+1663650283|92|27.782578|4.0570045|21|18|55.49956|2.0308998|112|24.029585|27.782578|6.9642487|167|0.020193446|0.53705746|1|0|0|0|0.5370575|2|
 ```
 
 The following columns are available in the `log` database table:
@@ -180,9 +180,19 @@ The following columns are available in the `log` database table:
 17|Stats_BatteryFullChargeCount|int|1||0
 18|Stats_TotalChargingBatteryAH|int|1||0
 19|Stats_CumulativePowerGenerationWH|real|1||0
-20|ChargingState|text|0||0
+20|ChargingState|int|0||0
 21|Faults|text|0||0
 ```
+
+Values for the `ChargingState` column:
+
+* 0 = ChargingDeactivated
+* 1 = ChargingActivated
+* 2 = MpptChargingMode
+* 3 = EqualizingChargingMode
+* 4 = BoostChargingMode
+* 5 = FloatingChargingMode
+* 6 = CurrentLimiting (overpower)
 
 Use the [Sqlite Grafana plugin](https://grafana.com/grafana/plugins/frser-sqlite-datasource/)
 to allow Grafana to read the Sqlite database.

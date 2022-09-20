@@ -96,7 +96,7 @@ class CSVDataLogger(val file: File, val utc: Boolean) : DataLogger {
         StderrIO.writeln("Record cleanup not implemented for CSV")
     }
 
-    override fun toString(): String = "CSVDataLogger(file=$file, utc=$utc)"
+    override fun toString(): String = "CSVDataLogger($file, utc=$utc)"
 }
 
 /**
@@ -146,7 +146,7 @@ class SqliteDataLogger(val file: File) : DataLogger {
                     "Stats_BatteryFullChargeCount int not null," +
                     "Stats_TotalChargingBatteryAH int not null," +
                     "Stats_CumulativePowerGenerationWH real not null," +
-                    "ChargingState text," +
+                    "ChargingState int," +
                     "Faults text)")
         }
     }
@@ -160,7 +160,7 @@ class SqliteDataLogger(val file: File) : DataLogger {
                 cols.add(col)
                 values.add(
                     when (value) {
-                        is Number, is UShort, is UInt -> value.toString()
+                        is Number, is UShort, is UInt, is UByte -> value.toString()
                         else -> "'$value'"
                     }
                 )
@@ -187,7 +187,7 @@ class SqliteDataLogger(val file: File) : DataLogger {
         add("Stats_BatteryFullChargeCount", data.historicalData.batteryFullChargeCount)
         add("Stats_TotalChargingBatteryAH", data.historicalData.totalChargingBatteryAH)
         add("Stats_CumulativePowerGenerationWH", data.historicalData.cumulativePowerGenerationWH)
-        add("ChargingState", data.status.chargingState?.name)
+        add("ChargingState", data.status.chargingState?.value)
         add("Faults", data.status.faults.joinToString(",") { it.name } .ifBlank { null })
 
         sql("insert or replace into log (${cols.joinToString(",")}) values (${values.joinToString(",")})")
@@ -198,5 +198,5 @@ class SqliteDataLogger(val file: File) : DataLogger {
         sql("delete from log where DateTime <= $deleteOlderThan")
     }
 
-    override fun toString(): String = "SqliteDataLogger(file=$file)"
+    override fun toString(): String = "SqliteDataLogger($file)"
 }
