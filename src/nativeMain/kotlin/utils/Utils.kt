@@ -132,9 +132,10 @@ fun exec(command: String, redirectStderr: Boolean = true): String {
         val buffer = ByteArray(4096)
         buffer.usePinned {
             while (true) {
-                val input = fgets(it.addressOf(0), buffer.size, fp) ?: break
-                if (errno != 0) {
-                    iofail("fgets")
+                val input = fgets(it.addressOf(0), buffer.size, fp)
+                if (input == null) {
+                    // don't check for errno, it returns 2 for some weird reason even if everything is okay.
+                    break
                 }
                 processStdout.append(input.toKString())
             }
