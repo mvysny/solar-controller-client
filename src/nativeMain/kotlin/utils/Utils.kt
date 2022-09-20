@@ -6,6 +6,7 @@ import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
+@Throws(IOException::class)
 inline fun <R: Comparable<R>> checkNative(op: String, range: ClosedRange<R>, call: () -> R): R {
     val result: R = call()
     if (result !in range) {
@@ -14,6 +15,7 @@ inline fun <R: Comparable<R>> checkNative(op: String, range: ClosedRange<R>, cal
     return result
 }
 
+@Throws(IOException::class)
 inline fun <R: CPointed> checkNativeNotNull(op: String, call: () -> CPointer<R>?): CPointer<R> {
     return call() ?: iofail(op)
 }
@@ -21,6 +23,7 @@ inline fun <R: CPointed> checkNativeNotNull(op: String, call: () -> CPointer<R>?
 /**
  * Always throws [IOException] with the current [errno].
  */
+@Throws(IOException::class)
 fun iofail(op: String): Nothing {
     val e = errno
     val err = strerror(e)?.toKString() ?: ""

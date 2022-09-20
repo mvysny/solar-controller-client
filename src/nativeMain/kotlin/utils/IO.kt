@@ -2,6 +2,7 @@ package utils
 
 import kotlinx.cinterop.*
 import platform.posix.*
+import utils.StdoutIO.close
 
 interface Closeable {
     /**
@@ -44,6 +45,7 @@ interface IO : Closeable {
      * You most probably want to call [writeFully].
      * @return the actual number of bytes written, 1 or greater.
      */
+    @Throws(IOException::class)
     fun write(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size): Int
 
     /**
@@ -52,6 +54,7 @@ interface IO : Closeable {
      * @param length must be 1 or more
      * @return 1 or more - the number of bytes actually read and stored into [bytes]. Not more than [length]. -1 on EOF
      */
+    @Throws(IOException::class)
     fun read(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size): Int
 }
 
@@ -59,6 +62,7 @@ interface IO : Closeable {
  * Writes all [bytes] to the underlying IO. Blocks until the bytes are written.
  * Does nothing if the array is empty.
  */
+@Throws(IOException::class)
 fun IO.writeFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
     if (length == 0) {
         return
@@ -77,6 +81,7 @@ fun IO.writeFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
  * Does nothing if the array is empty.
  * @throws EOFException if we reach the end of stream during the read.
  */
+@Throws(IOException::class)
 fun IO.readFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
     require(offset in bytes.indices) { "offset: out of bounds $offset, must be ${bytes.indices}" }
     require(length >= 0) { "length must be 0 or greater but was $length" }
@@ -94,6 +99,7 @@ fun IO.readFully(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size) {
 /**
  * Reads [noBytes] and returns it in a newly allocated byte array.
  */
+@Throws(IOException::class)
 fun IO.readFully(noBytes: Int): ByteArray {
     require(noBytes >= 0) { "$noBytes: must be 0 or higher" }
     val bytes = ByteArray(noBytes)
@@ -101,10 +107,12 @@ fun IO.readFully(noBytes: Int): ByteArray {
     return bytes
 }
 
+@Throws(IOException::class)
 fun IO.write(line: String) {
     writeFully(line.encodeToByteArray())
 }
 
+@Throws(IOException::class)
 fun IO.writeln(line: String) {
     write(line)
     writeFully(byteArrayOf('\n'.code.toByte()))
@@ -141,6 +149,9 @@ data class File(val pathname: String) {
     override fun toString(): String = "File($pathname)"
 }
 
+/**
+ * Implements [IO] which is able to read from and write to given file descriptor [fd].
+ */
 open class FDIO(protected val fd: Int) : IO {
     override fun write(bytes: ByteArray, offset: Int, length: Int): Int {
         require(offset in bytes.indices) { "offset: out of bounds $offset, must be ${bytes.indices}" }
@@ -177,7 +188,7 @@ open class FDIO(protected val fd: Int) : IO {
 }
 
 /**
- * STDOUT.
+ * STDOUT. [close] does nothing.
  */
 object StdoutIO : FDIO(1) {
     override fun close() {}
@@ -185,7 +196,7 @@ object StdoutIO : FDIO(1) {
 }
 
 /**
- * STDERR.
+ * STDERR. [close] does nothing.
  */
 object StderrIO : FDIO(2) {
     override fun close() {}
@@ -259,6 +270,7 @@ private val rwrwr = S_IRUSR or S_IWUSR or S_IRGRP or S_IWGRP or S_IROTH
 
 /**
  * All written bytes are thrown away; provides an endless stream of zeroes as input.
+ * [close] does nothing.
  */
 class DevZero: IO {
     override fun write(bytes: ByteArray, offset: Int, length: Int): Int {
