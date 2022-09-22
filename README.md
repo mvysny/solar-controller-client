@@ -159,30 +159,32 @@ $ sqlite3 log.db "select * from log"
 ```
 
 The following columns are available in the `log` database table:
-```
-0|DateTime|integer|1||1
-1|BatterySOC|integer|1||0
-2|BatteryVoltage|real|1||0
-3|ChargingCurrentToBattery|real|1||0
-4|BatteryTemp|int|1||0
-5|ControllerTemp|int|1||0
-6|SolarPanelVoltage|real|1||0
-7|SolarPanelCurrent|real|1||0
-8|SolarPanelPower|int|1||0
-9|Daily_BatteryMinVoltage|real|1||0
-10|Daily_BatteryMaxVoltage|real|1||0
-11|Daily_MaxChargingCurrent|real|1||0
-12|Daily_MaxChargingPower|int|1||0
-13|Daily_ChargingAmpHours|real|1||0
-14|Daily_PowerGeneration|real|1||0
-15|Stats_DaysUp|int|1||0
-16|Stats_BatteryOverDischargeCount|int|1||0
-17|Stats_BatteryFullChargeCount|int|1||0
-18|Stats_TotalChargingBatteryAH|int|1||0
-19|Stats_CumulativePowerGenerationWH|real|1||0
-20|ChargingState|int|0||0
-21|Faults|text|0||0
-```
+
+| Column                             | Type | Meaning|
+|------------------------------------|------|--------|
+| DateTime                           |integer|unix timestamp: a number of seconds since the Epoch 00:00:00 UTC on 1 January 1970.|
+| BatterySOC                         |integer|Current battery capacity value (state of charge), 0..100%|
+| BatteryVoltage                     |real|battery voltage in V|
+| ChargingCurrentToBattery           |real|charging current (to battery), A|
+| BatteryTemp                        |int|battery temperature in °C|
+| ControllerTemp                     |int|controller temperature in °C|
+| SolarPanelVoltage                  |real|solar panel voltage, in V|
+| SolarPanelCurrent                  |real|Solar panel current (to controller), in A|
+| SolarPanelPower                    |int|charging power, in W|
+| Daily_BatteryMinVoltage            |real|Battery's min. voltage of the current day, V|
+| Daily_BatteryMaxVoltage            |real|Battery's max. voltage of the current day, V|
+| Daily_MaxChargingCurrent           |real|Max. charging current of the current day, A. Probably applies to controller only.|
+| Daily_MaxChargingPower             |int|Max. charging current of the current day, A. Probably applies to controller only.|
+| Daily_ChargingAmpHours             |real|Charging amp-hrs of the current day, AH.probably only applies to controller; will be 0 for inverter.|
+| Daily_PowerGeneration              |real|Power generation of the current day, WH.|
+| Stats_DaysUp                       |int|Total number of operating days|
+| Stats_BatteryOverDischargeCount    |int|Total number of battery over-discharges|
+| Stats_BatteryFullChargeCount       |int|Total number of battery full-charges.|
+| Stats_TotalChargingBatteryAH       |int|Total charging amp-hrs of the battery.|
+| Stats_CumulativePowerGenerationWH  |real|Total discharging amp-hrs of the battery. mavi: probably only applicable to inverters, 0 for controller.|
+| ChargingState                      |int|Charging status, see below|
+| Faults                             |text|Comma-separated list of faults|
+
 
 The `DateTime` column is an unix timestamp: a number of seconds since the Epoch 00:00:00 UTC on 1 January 1970.
 It's directly compatible with the "number input" timestamp of the [sqlite Grafana plugin](https://grafana.com/grafana/plugins/frser-sqlite-datasource/).
