@@ -330,7 +330,7 @@ fun String.toZonedDateTime() = ZonedDateTime.parse(this)
 /**
  * Runs action on midnight. Don't forget to call [tick] periodically. Beta.
  */
-class Alarm(private val onMidnight: () -> Unit) {
+class MidnightAlarm(private val onMidnight: () -> Unit) {
     private var today = LocalDate.today()
 
     fun tick() {

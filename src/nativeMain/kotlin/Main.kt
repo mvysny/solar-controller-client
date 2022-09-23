@@ -51,12 +51,12 @@ fun main(args: Array<String>) {
                 it.deleteRecordsOlderThan(pruneLog2)
             }
 
-            val alarm = Alarm { dataLoggers.forEach { it.deleteRecordsOlderThan(pruneLog2) } }
+            val midnightAlarm = MidnightAlarm { dataLoggers.forEach { it.deleteRecordsOlderThan(pruneLog2) } }
             repeatEvery(pollInterval * 1000L) {
                 val allData: RenogyData = client.getAllData(systemInfo)
                 stateFile2.writeContents(allData.toJson())
                 dataLoggers.forEach { it.append(allData) }
-                alarm.tick()
+                midnightAlarm.tick()
                 true
             }
         }
