@@ -119,9 +119,9 @@ class StdoutCSVDataLogger(val utc: Boolean) : DataLogger {
     }
 }
 
-class SqliteDataLogger(val file: File) : DataLogger {
+class SqliteDataLogger(val file: File, val busyTimeoutMs: Int = 2000) : DataLogger {
     private fun sql(sql: String) {
-        exec("sqlite3 ${file.pathname} \"PRAGMA busy_timeout = 1000; $sql\"")
+        exec("sqlite3 ${file.pathname} \"PRAGMA busy_timeout = $busyTimeoutMs; $sql\"")
     }
     override fun init() {
         if (!file.exists()) {
