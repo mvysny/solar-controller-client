@@ -53,10 +53,15 @@ fun main(args: Array<String>) {
 
             val midnightAlarm = MidnightAlarm { dataLoggers.forEach { it.deleteRecordsOlderThan(pruneLog2) } }
             repeatEvery(pollInterval * 1000L) {
-                val allData: RenogyData = client.getAllData(systemInfo)
-                stateFile2.writeContents(allData.toJson())
-                dataLoggers.forEach { it.append(allData) }
-                midnightAlarm.tick()
+                try {
+                    val allData: RenogyData = client.getAllData(systemInfo)
+                    stateFile2.writeContents(allData.toJson())
+                    dataLoggers.forEach { it.append(allData) }
+                    midnightAlarm.tick()
+                } catch (e: Exception) {
+                    // don't crash on exception; print it out and continue.
+                    e.printStackTrace()
+                }
                 true
             }
         }
