@@ -286,3 +286,5 @@ class DevZero: IO {
     override fun close() {}
     override fun toString(): String = "DevZero()"
 }
+
+fun String.toFile(): File = File(this)
