@@ -30,6 +30,19 @@ data class Args(
 
     val isDummy: Boolean get() = device.pathname == "dummy"
 
+    fun getDataLoggers(): List<DataLogger> {
+        val dataLoggers = mutableListOf<DataLogger>(StdoutCSVDataLogger(utc))
+        if (csv != null) {
+            dataLoggers.removeAll { it is StdoutCSVDataLogger }
+            dataLoggers.add(CSVDataLogger(csv, utc))
+        }
+        if (sqlite != null) {
+            dataLoggers.removeAll { it is StdoutCSVDataLogger }
+            dataLoggers.add(SqliteDataLogger(sqlite))
+        }
+        return dataLoggers
+    }
+
     companion object {
         fun parse(args: Array<String>): Args {
             val parser = ArgParser("solar-controller-client")
