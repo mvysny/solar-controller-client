@@ -160,30 +160,30 @@ $ sqlite3 log.db "select * from log"
 
 The following columns are available in the `log` database table:
 
-| Column                             | Type | Meaning|
-|------------------------------------|------|--------|
-| DateTime                           |integer|unix timestamp: a number of seconds since the Epoch 00:00:00 UTC on 1 January 1970.|
-| BatterySOC                         |integer|Current battery capacity value (state of charge), 0..100%|
-| BatteryVoltage                     |real|battery voltage in V|
-| ChargingCurrentToBattery           |real|charging current (to battery), A|
-| BatteryTemp                        |int|battery temperature in °C|
-| ControllerTemp                     |int|controller temperature in °C|
-| SolarPanelVoltage                  |real|solar panel voltage, in V|
-| SolarPanelCurrent                  |real|Solar panel current (to controller), in A|
-| SolarPanelPower                    |int|charging power, in W|
-| Daily_BatteryMinVoltage            |real|Battery's min. voltage of the current day, V|
-| Daily_BatteryMaxVoltage            |real|Battery's max. voltage of the current day, V|
-| Daily_MaxChargingCurrent           |real|Max. charging current of the current day, A. Probably applies to controller only.|
-| Daily_MaxChargingPower             |int|Max. charging current of the current day, A. Probably applies to controller only.|
-| Daily_ChargingAmpHours             |real|Charging amp-hrs of the current day, AH.probably only applies to controller; will be 0 for inverter.|
-| Daily_PowerGeneration              |real|Power generation of the current day, WH.|
-| Stats_DaysUp                       |int|Total number of operating days|
-| Stats_BatteryOverDischargeCount    |int|Total number of battery over-discharges|
-| Stats_BatteryFullChargeCount       |int|Total number of battery full-charges.|
-| Stats_TotalChargingBatteryAH       |int|Total charging amp-hrs of the battery.|
-| Stats_CumulativePowerGenerationWH  |real|Total discharging amp-hrs of the battery. mavi: probably only applicable to inverters, 0 for controller.|
-| ChargingState                      |int|Charging status, see below|
-| Faults                             |text|Comma-separated list of faults|
+| Column                             | Type | Meaning                                                                                                  |
+|------------------------------------|------|----------------------------------------------------------------------------------------------------------|
+| DateTime                           |integer| unix timestamp: a number of seconds since the Epoch 00:00:00 UTC on 1 January 1970.                      |
+| BatterySOC                         |integer| Current battery capacity value (state of charge), 0..100%                                                |
+| BatteryVoltage                     |real| battery voltage in V                                                                                     |
+| ChargingCurrentToBattery           |real| charging current (to battery), A                                                                         |
+| BatteryTemp                        |int| battery temperature in °C                                                                                |
+| ControllerTemp                     |int| controller temperature in °C                                                                             |
+| SolarPanelVoltage                  |real| solar panel voltage, in V                                                                                |
+| SolarPanelCurrent                  |real| Solar panel current (to controller), in A                                                                |
+| SolarPanelPower                    |int| charging power, in W                                                                                     |
+| Daily_BatteryMinVoltage            |real| Battery's min. voltage of the current day, V                                                             |
+| Daily_BatteryMaxVoltage            |real| Battery's max. voltage of the current day, V                                                             |
+| Daily_MaxChargingCurrent           |real| Max. charging current of the current day, A. Probably applies to controller only.                        |
+| Daily_MaxChargingPower             |int| Max. charging power of the current day, W. Probably applies to controller only.                          |
+| Daily_ChargingAmpHours             |real| Charging amp-hrs of the current day, AH.probably only applies to controller; will be 0 for inverter.     |
+| Daily_PowerGeneration              |real| Power generation of the current day, WH.                                                                 |
+| Stats_DaysUp                       |int| Total number of operating days                                                                           |
+| Stats_BatteryOverDischargeCount    |int| Total number of battery over-discharges                                                                  |
+| Stats_BatteryFullChargeCount       |int| Total number of battery full-charges.                                                                    |
+| Stats_TotalChargingBatteryAH       |int| Total charging amp-hrs of the battery.                                                                   |
+| Stats_CumulativePowerGenerationWH  |real| Total discharging amp-hrs of the battery. mavi: probably only applicable to inverters, 0 for controller. |
+| ChargingState                      |int| Charging status, see below                                                                               |
+| Faults                             |text| Comma-separated list of faults                                                                           |
 
 
 The `DateTime` column is an unix timestamp: a number of seconds since the Epoch 00:00:00 UTC on 1 January 1970.
