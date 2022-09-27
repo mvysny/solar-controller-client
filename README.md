@@ -14,9 +14,9 @@ which you can inspect to see the performance of your solar array.
 For exact instructions on how to connect Renogy Rover RS232/RJ12 over an USB adapter to your Raspberry PI, please see
 [NodeRenogy](https://github.com/mickwheelz/NodeRenogy).
 
-You can use Grafana and the sqlite plugin to read the sqlite log database and show charging data in charts.
+You can use Grafana and the sqlite plugin to read the sqlite log database and show charging data in charts:
 
-TODO example of charts.
+![Grafana Screenshot](docs/grafana.png)
 
 ## Help
 
