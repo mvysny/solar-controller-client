@@ -2,9 +2,12 @@
 
 import utils.*
 
-class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyClient {
+class RenogyModbusClient(val io: SerialPort, val deviceAddress: Byte = 0x01) : RenogyClient {
     init {
         require(deviceAddress in 0..0xf7) { "$deviceAddress: Device address must be 0x01..0xf7, 0x00 is a broadcast address to which all slaves respond but do not return commands" }
+
+        log.debug("Draining $io")
+        io.drain()
     }
 
     /**

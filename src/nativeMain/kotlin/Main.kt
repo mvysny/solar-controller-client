@@ -9,9 +9,7 @@ fun main(_args: Array<String>) {
     io.use { serialPort ->
         (serialPort as? SerialPort)?.configure()
         val client: RenogyClient =
-            if (args.isDummy) DummyRenogyClient() else RenogyModbusClient(
-                serialPort
-            )
+            if (args.isDummy) DummyRenogyClient() else RenogyModbusClient(serialPort as SerialPort)
 
         if (args.status) {
             val allData: RenogyData = client.getAllData()
@@ -53,6 +51,7 @@ private fun mainLoop(
             args.stateFile.writeContents(allData.toJson())
             dataLoggers.forEach { it.append(allData) }
             midnightAlarm.tick()
+            log.debug("Main loop: done")
         } catch (e: Exception) {
             // don't crash on exception; print it out and continue.
             log.warn("Main loop failure", e)

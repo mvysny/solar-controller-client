@@ -125,6 +125,7 @@ fun IO.writeln(line: String) {
 open class IOException(message: String, cause: Throwable? = null, val errno: Int? = null) : Exception(message, cause)
 open class EOFException(message: String = "EOF", cause: Throwable? = null) : IOException(message, cause)
 open class FileNotFoundException(message: String, cause: Throwable? = null) : IOException(message, cause, 2)
+open class TimeoutException(message: String = "Timeout") : IOException(message)
 
 data class File(val pathname: String) {
     init {
@@ -176,11 +177,13 @@ open class FDIO(protected val fd: Int) : IO {
                 read(fd, pinned.addressOf(offset), length.toULong())
             }
             if (bytesRead == 0L) {
-                return -1
+                return handleZeroBytesRead()
             }
             bytesRead.toInt()
         }
     }
+
+    protected open fun handleZeroBytesRead(): Int = -1
 
     override fun close() {
         checkNativeZero("close") { close(fd) }
@@ -253,7 +256,9 @@ class SerialPort(file: File) : IOFile(file) {
             // tty.c_oflag &= ~ONOEOT; // Prevent removal of C-d chars (0x004) in output (NOT PRESENT ON LINUX)
 
             tty.c_cc[VTIME] = 10.toUByte()    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
-            tty.c_cc[VMIN] = 1.toUByte()  // block endlessly until at least 1 byte is read.
+            tty.c_cc[VMIN] = 0.toUByte()  // never block endlessly. If Renogy spuriously doesn't send a response, the program would essentially stop working.
+            // It's much better to fail the comms and repeat later on. Therefore, if the device won't respond properly,
+            // we will throw TimeoutException in `handleZeroBytesRead()`. This will also allow `drain()` to work properly.
 
             // Set in/out baud rate to be 9600
             checkNativeZero("cfsetispeed") { cfsetispeed(tty.ptr, baud.toUInt()) }
@@ -263,7 +268,23 @@ class SerialPort(file: File) : IOFile(file) {
         }
     }
 
+    override fun handleZeroBytesRead(): Int = throw TimeoutException()
+
     override fun toString(): String = "SerialPort($file)"
+
+    /**
+     * Drains the pipe so that there are no stray bytes left. Blocks up to 1s (configured in [configure]).
+     */
+    fun drain() {
+        val buf = ByteArray(128)
+        try {
+            while (true) {
+                readFully(buf)  // if there are no more bytes, 'handleZeroBytesRead' should throw TimeoutException.
+            }
+        } catch (ex: TimeoutException) {
+            // okay
+        }
+    }
 }
 
 private val rwrwr = S_IRUSR or S_IWUSR or S_IRGRP or S_IWGRP or S_IROTH
