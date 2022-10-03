@@ -47,13 +47,15 @@ private fun mainLoop(
     val midnightAlarm = MidnightAlarm { dataLoggers.forEach { it.deleteRecordsOlderThan(args.pruneLog) } }
     repeatEvery(args.pollInterval * 1000L) {
         try {
+            log.debug("Getting all data from $client")
             val allData: RenogyData = client.getAllData(systemInfo)
+            log.debug("Writing data to ${args.stateFile}")
             args.stateFile.writeContents(allData.toJson())
             dataLoggers.forEach { it.append(allData) }
             midnightAlarm.tick()
         } catch (e: Exception) {
             // don't crash on exception; print it out and continue.
-            log.err("Main loop failure", e)
+            log.warn("Main loop failure", e)
         }
         true
     }

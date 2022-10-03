@@ -93,10 +93,14 @@ class CSVDataLogger(val file: File, val utc: Boolean) : DataLogger {
 
     override fun deleteRecordsOlderThan(days: Int) {
         // it would take too much time to process a huge CSV file; also CSV is considered experimental, so don't bother
-        StderrIO.writeln("Record cleanup not implemented for CSV")
+        log.info("Record cleanup not implemented for CSV")
     }
 
     override fun toString(): String = "CSVDataLogger($file, utc=$utc)"
+
+    companion object {
+        val log = Log.get("CSVDataLogger")
+    }
 }
 
 /**
@@ -121,10 +125,13 @@ class StdoutCSVDataLogger(val utc: Boolean) : DataLogger {
 
 class SqliteDataLogger(val file: File, val busyTimeoutMs: Int = 2000) : DataLogger {
     private fun sql(sql: String) {
+        log.debug("Running: $sql")
         exec("sqlite3 ${file.pathname} \"PRAGMA busy_timeout = $busyTimeoutMs; $sql\"")
     }
     override fun init() {
+        log.debug("Logging into $file")
         if (!file.exists()) {
+            log.debug("Database $file doesn't exist, creating new")
             sql("create table log(" +
                     "DateTime integer primary key not null," +
                     "BatterySOC integer not null," +
@@ -194,9 +201,14 @@ class SqliteDataLogger(val file: File, val busyTimeoutMs: Int = 2000) : DataLogg
     }
 
     override fun deleteRecordsOlderThan(days: Int) {
+        log.info("Deleting old records")
         val deleteOlderThan = getSecondsSinceEpoch() - days.days.inWholeSeconds
         sql("delete from log where DateTime <= $deleteOlderThan")
     }
 
     override fun toString(): String = "SqliteDataLogger($file)"
+
+    companion object {
+        val log = Log.get("SqliteDataLogger")
+    }
 }
