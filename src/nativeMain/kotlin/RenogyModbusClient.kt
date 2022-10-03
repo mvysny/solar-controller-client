@@ -24,7 +24,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
         // read response
         val responseHeader = io.readFully(3)
         if (responseHeader[0] != deviceAddress) {
-            throw RenogyException("Invalid response: expected deviceAddress $deviceAddress but got ${responseHeader[0]}")
+            throw RenogyException("${startAddress.toHex()}: Invalid response: expected deviceAddress $deviceAddress but got ${responseHeader[0]}")
         }
         if (responseHeader[1] == 0x83.toByte()) {
             // error response. First verify checksum.
@@ -32,18 +32,18 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
             throw RenogyException.fromCode(responseHeader[2])
         }
         if (responseHeader[1] != 0x03.toByte()) {
-            throw RenogyException("Unexpected response code: expected 3 but got ${responseHeader[1]}")
+            throw RenogyException("${startAddress.toHex()}: Unexpected response code: expected 3 but got ${responseHeader[1]}")
         }
         // normal response. Read the data.
         val dataLength = responseHeader[2].toUByte()
+        require(dataLength.toUShort() == noOfReadBytes) { "${startAddress.toHex()}: the call was expected to return $noOfReadBytes bytes but got $dataLength" }
+
         if (dataLength !in 1.toUByte()..0xFA.toUByte()) {
-            throw RenogyException("$dataLength: dataLength must be 0x01..0xFA")
+            throw RenogyException("${startAddress.toHex()}: dataLength must be 0x01..0xFA but was $dataLength")
         }
         val data = io.readFully(dataLength.toInt())
         // verify the CRC
         verifyCRC(crcOf(responseHeader, data), io.readFully(2))
-
-        require(dataLength.toUShort() == noOfReadBytes) { "$dataLength: the call was expected to return $noOfReadBytes bytes" }
 
         // all OK. Return the response
         return data
