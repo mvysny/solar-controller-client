@@ -2,12 +2,10 @@
 
 import utils.*
 
-class RenogyModbusClient(val io: SerialPort, val deviceAddress: Byte = 0x01) : RenogyClient {
+class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyClient {
     init {
         require(deviceAddress in 0..0xf7) { "$deviceAddress: Device address must be 0x01..0xf7, 0x00 is a broadcast address to which all slaves respond but do not return commands" }
-
-        log.debug("Draining $io")
-        io.drain()
+        drainQuietly()
     }
 
     /**
@@ -171,8 +169,19 @@ class RenogyModbusClient(val io: SerialPort, val deviceAddress: Byte = 0x01) : R
     override fun toString(): String =
         "RenogyModbusClient(io=$io, deviceAddress=$deviceAddress)"
 
+    override fun drainQuietly() {
+        if (io is SerialPort) {
+            log.debug("Draining $io")
+            try {
+                io.drain()
+            } catch (e: Exception) {
+                log.warn("Failed to drain responses", e)
+            }
+        }
+    }
+
     companion object {
         private val COMMAND_READ_REGISTER: Byte = 0x03
-        val log = Log.get("RenogyModbusClient")
+        val log = Log.get(RenogyModbusClient::class)
     }
 }

@@ -89,6 +89,9 @@ class DummyRenogyClient() : RenogyClient {
         return dummyRenogyData
     }
 
+    override fun drainQuietly() {
+    }
+
     /**
      * Updates statistics. Now we can calculate [DailyStats] and [HistoricalData] correctly.
      * @param solarPanelPowerW solar array produces this amount of watts now.

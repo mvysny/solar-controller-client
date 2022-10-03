@@ -55,6 +55,8 @@ private fun mainLoop(
         } catch (e: Exception) {
             // don't crash on exception; print it out and continue.
             log.warn("Main loop failure", e)
+            // drain any unread bytes.
+            client.drainQuietly()
         }
         true
     }

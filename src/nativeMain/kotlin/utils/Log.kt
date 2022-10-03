@@ -1,5 +1,7 @@
 package utils
 
+import kotlin.reflect.KClass
+
 enum class LogLevel {
     DEBUG, INFO, WARN, ERR
 }
@@ -26,6 +28,11 @@ interface Log {
          * @param tag who's logging. Almost always the class name.
          */
         fun get(tag: String): Log = StderrLog(tag)
+
+        /**
+         * Gets the logger for given [kClass].
+         */
+        fun get(kClass: KClass<*>): Log = get(kClass.simpleName ?: "UNKNOWN")
     }
 }
 
@@ -39,6 +46,10 @@ class StderrLog(val tag: String) : Log {
                 append(LocalDateTime.now().format())
                 append(" [").append(level).append("] ").append(tag).append(": ")
                     .append(msg)
+                if (ex != null) {
+                    append("; ")
+                    append(ex.toString())
+                }
             })
             ex?.printStackTrace()
         }

@@ -279,7 +279,7 @@ class SerialPort(file: File) : IOFile(file) {
         val buf = ByteArray(128)
         try {
             while (true) {
-                readFully(buf)  // if there are no more bytes, 'handleZeroBytesRead' should throw TimeoutException.
+                readFully(buf)  // if there are no more bytes, 'handleZeroBytesRead' should get caled which will throw TimeoutException.
             }
         } catch (ex: TimeoutException) {
             // okay

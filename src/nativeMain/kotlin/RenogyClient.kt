@@ -16,6 +16,11 @@ interface RenogyClient {
      * @throws RenogyException if the data retrieval fails
      */
     fun getAllData(cachedSystemInfo: SystemInfo? = null): RenogyData
+
+    /**
+     * Drain all data from the serial pipe, so that next request won't read some stale data.
+     */
+    fun drainQuietly()
 }
 
 /**

@@ -48,7 +48,7 @@ data class Args(
     }
 
     companion object {
-        val log = Log.get("Args")
+        val log = Log.get(Args::class)
         fun parse(args: Array<String>): Args {
             val parser = ArgParser("solar-controller-client")
             val device by parser.argument(ArgType.String, description = "the file name of the serial device to communicate with, e.g. /dev/ttyUSB0 . Pass in `dummy` for a dummy Renogy client")

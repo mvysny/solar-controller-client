@@ -99,7 +99,7 @@ class CSVDataLogger(val file: File, val utc: Boolean) : DataLogger {
     override fun toString(): String = "CSVDataLogger($file, utc=$utc)"
 
     companion object {
-        val log = Log.get("CSVDataLogger")
+        val log = Log.get(CSVDataLogger::class)
     }
 }
 
@@ -209,6 +209,6 @@ class SqliteDataLogger(val file: File, val busyTimeoutMs: Int = 2000) : DataLogg
     override fun toString(): String = "SqliteDataLogger($file)"
 
     companion object {
-        val log = Log.get("SqliteDataLogger")
+        val log = Log.get(SqliteDataLogger::class)
     }
 }
