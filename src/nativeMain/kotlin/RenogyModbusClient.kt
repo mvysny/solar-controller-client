@@ -62,6 +62,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
      * Retrieves the [SystemInfo] from the device.
      */
     override fun getSystemInfo(): SystemInfo {
+        log.debug("getting system info")
         var result = readRegister(0x0A.toUShort(), 4.toUShort())
         val maxVoltage = result[0].toInt()
         val ratedChargingCurrent = result[1].toInt()
@@ -89,6 +90,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
      * the solar panels.
      */
     fun getPowerStatus(): PowerStatus {
+        log.debug("getting power status")
         val result = readRegister(0x0100.toUShort(), 20.toUShort())
         val batterySOC = result.getUShortHiLoAt(0)
         val batteryVoltage = result.getUShortHiLoAt(2).toFloat() / 10
@@ -110,6 +112,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
      * Returns the daily statistics.
      */
     fun getDailyStats(): DailyStats {
+        log.debug("getting daily stats")
         val result = readRegister(0x010B.toUShort(), 20.toUShort())
         val batteryMinVoltage: Float = result.getUShortHiLoAt(0).toFloat() / 10
         val batteryMaxVoltage: Float = result.getUShortHiLoAt(2).toFloat() / 10
@@ -128,6 +131,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
      * Returns the historical data summary.
      */
     fun getHistoricalData(): HistoricalData {
+        log.debug("getting historical data")
         val result = readRegister(0x0115.toUShort(), 22.toUShort())
         val daysUp: UShort = result.getUShortHiLoAt(0)
         val batteryOverDischargeCount: UShort = result.getUShortHiLoAt(2)
@@ -143,6 +147,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
      * Returns the current charging status and any current faults.
      */
     fun getStatus(): RenogyStatus {
+        log.debug("getting status")
         val result = readRegister(0x120.toUShort(), 6.toUShort())
         val streetLightOn = (result[0].toUByte() and 0x80.toUByte()) != 0.toUByte()
         val streetLightBrightness = result[0].toUByte() and 0x7F.toUByte()
@@ -165,5 +170,6 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
 
     companion object {
         private val COMMAND_READ_REGISTER: Byte = 0x03
+        val log = Log.get("RenogyModbusClient")
     }
 }

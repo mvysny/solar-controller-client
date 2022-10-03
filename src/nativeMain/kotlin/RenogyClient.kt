@@ -1,6 +1,5 @@
 import RenogyException.Companion.fromCode
 import kotlinx.serialization.Serializable
-import utils.LocalDateTime
 import utils.toHex
 
 interface RenogyClient {
