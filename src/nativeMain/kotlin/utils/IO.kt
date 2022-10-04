@@ -153,17 +153,16 @@ data class File(val pathname: String) {
 /**
  * Implements [IO] which is able to read from and write to given file descriptor [fd].
  */
-open class FDIO(protected val fd: Int) : IO {
+open class FDIO(protected val fd: int32_t) : IO {
     override fun write(bytes: ByteArray, offset: Int, length: Int): Int {
         require(offset in bytes.indices) { "offset: out of bounds $offset, must be ${bytes.indices}" }
         require(length > 0) { "length must be 1 or greater but was $length" }
         require((offset+length-1) in bytes.indices) { "length: out of bounds $offset+$length, must be ${bytes.indices}" }
 
         return bytes.usePinned { pinned ->
-            val bytesWritten: Long = checkNativeNonNegativeLong("write") {
-                write(fd, pinned.addressOf(offset), length.toULong())
-            }
-            bytesWritten.toInt()
+            val bytesWritten: ssize_t = platform.posix.write(fd, pinned.addressOf(offset), length.convert())
+            if (bytesWritten < 0) iofail("write")
+            bytesWritten.convert()
         }
     }
 
@@ -173,13 +172,12 @@ open class FDIO(protected val fd: Int) : IO {
         require((offset+length-1) in bytes.indices) { "length: out of bounds $offset+$length, must be ${bytes.indices}" }
 
         return bytes.usePinned { pinned ->
-            val bytesRead: Long = checkNativeNonNegativeLong("read") {
-                read(fd, pinned.addressOf(offset), length.toULong())
-            }
-            if (bytesRead == 0L) {
+            val bytesRead: ssize_t = platform.posix.read(fd, pinned.addressOf(offset), length.convert())
+            if (bytesRead < 0) iofail("read")
+            if (bytesRead <= 0) {
                 return handleZeroBytesRead()
             }
-            bytesRead.toInt()
+            bytesRead.convert()
         }
     }
 

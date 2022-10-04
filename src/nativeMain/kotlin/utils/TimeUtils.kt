@@ -1,9 +1,6 @@
 package utils
 
-import kotlinx.cinterop.cValue
-import kotlinx.cinterop.cValuesOf
-import kotlinx.cinterop.pointed
-import kotlinx.cinterop.staticCFunction
+import kotlinx.cinterop.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -46,8 +43,8 @@ fun sleepMillis(millis: Long): Boolean {
 
     setupSignalsForSleepOnce()
     val time = cValue<timespec> {
-        tv_sec = (millis / 1000) as __time_t
-        tv_nsec = ((millis % 1000) * 1000000) as __syscall_slong_t
+        tv_sec = (millis / 1000).convert()
+        tv_nsec = ((millis % 1000) * 1000000).convert()
     }
     if (nanosleep(time, null) != 0) {
         if (errno == EINTR) {
