@@ -39,6 +39,11 @@ Options:
     --help, -h -> Usage info 
 ```
 
+# Downloading
+
+Download the pre-built binaries at the [Releases](https://github.com/mvysny/solar-controller-client/releases) page. Alternatively,
+read below on how to compile the project from sources.
+
 # Running
 
 Example which will log dummy data periodically into the sqlite database:
@@ -212,10 +217,6 @@ of the device name. This will create a dummy renogy device and poll data off it:
 ```bash
 $ solar-controller-client.kexe dummy
 ```
-
-# Download link
-
-TODO
 
 # Compiling From Sources
 
