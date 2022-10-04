@@ -46,8 +46,8 @@ fun sleepMillis(millis: Long): Boolean {
 
     setupSignalsForSleepOnce()
     val time = cValue<timespec> {
-        tv_sec = millis / 1000
-        tv_nsec = (millis % 1000) * 1000000
+        tv_sec = (millis / 1000) as __time_t
+        tv_nsec = ((millis % 1000) * 1000000) as __syscall_slong_t
     }
     if (nanosleep(time, null) != 0) {
         if (errno == EINTR) {
@@ -182,7 +182,7 @@ data class LocalDateTime(val date: LocalDate, val time: LocalTime) : Comparable<
          * Returns the current date+time in user's local time zone.
          */
         fun now(): LocalDateTime {
-            val t: Long = getSecondsSinceEpoch()
+            val t: time_t = getSecondsSinceEpoch()
             // localtime() returns a pointer to static data and hence is not thread-safe. NULL means error.
             val tm: tm = checkNativeNotNull("localtime") { localtime(cValuesOf(t)) } .pointed
 
@@ -227,7 +227,7 @@ data class ZonedDateTime(val dateTime: LocalDateTime, val zone: ZoneId) {
          * Returns the current date+time in user local time zone, or alternatively in UTC if [utc] is true.
          */
         fun now(zone: ZoneId = ZoneId.UTC): ZonedDateTime {
-            val t: Long = getSecondsSinceEpoch()
+            val t: time_t = getSecondsSinceEpoch()
             // localtime() returns a pointer to static data and hence is not thread-safe. NULL means error.
             val tm: tm = checkNativeNotNull("gmtime") { gmtime(cValuesOf(t)) } .pointed
 
@@ -317,9 +317,11 @@ value class Instant private constructor(private val millis: Long) : Comparable<I
     }
 }
 
-fun getSecondsSinceEpoch(): Long {
+fun getSecondsSinceEpoch(): time_t {
     // time returns number of seconds since Epoch, 1970-01-01 00:00:00 +0000 (UTC). -1 or negative value means error.
-    return checkNativeNonNegativeLong("time") { time(null) }
+    val result: time_t = time(null)
+    if (result < 0) iofail("time")
+    return result
 }
 
 fun String.toLocalTime() = LocalTime.parse(this)
