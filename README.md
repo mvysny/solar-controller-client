@@ -220,10 +220,9 @@ $ solar-controller-client.kexe dummy
 
 # Compiling From Sources
 
-1. Install Java JDK 11+: `sudo apt install openjdk-11-jdk`. Java is only used to compile the project
-   - it is not necessary to run the app.
-2.  You don't need to install Gradle itself - the `gradlew` script will download Gradle and all
-    necessary files automatically, you only need to have an internet access.
+1. Install Java JDK 11+: `sudo apt install openjdk-11-jdk`. Java is only used to compile the project - it is not necessary to run the app.
+2. You don't need to install Gradle itself - the `gradlew` script will download Gradle and all
+    necessary files automatically, you only need to have access to the internet.
 3. Build with `./gradlew`. Find the binary in `build/bin/native/releaseExecutable`.
 4. Copy the binary to your Raspberry PI.
 
