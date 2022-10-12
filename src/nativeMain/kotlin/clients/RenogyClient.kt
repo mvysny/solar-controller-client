@@ -149,16 +149,16 @@ data class HistoricalData(
 
 /**
  * The daily statistics.
- * @param batteryMinVoltage Battery's min. voltage of the current day, V
- * @param batteryMaxVoltage Battery's max. voltage of the current day, V
- * @param maxChargingCurrent Max. charging current of the current day, A. Probably applies to controller only.
- * @param maxDischargingCurrent Max. discharging current of the current day, A. mavi: probably only applies to inverter; will be 0 for controller.
+ * @param batteryMinVoltage Battery's min. voltage of the current day, V. Precision: 1 decimal points.
+ * @param batteryMaxVoltage Battery's max. voltage of the current day, V. Precision: 1 decimal points.
+ * @param maxChargingCurrent Max. charging current of the current day, A. Probably applies to controller only. Precision: 2 decimal points.
+ * @param maxDischargingCurrent Max. discharging current of the current day, A. mavi: probably only applies to inverter; will be 0 for controller. Precision: 2 decimal points.
  * @param maxChargingPower Max. charging power of the current day, W. mavi: probably only applies to controller; will be 0 for inverter.
  * @param maxDischargingPower Max. discharging power of the current day, W. mavi: probably only applies to inverter; will be 0 for controller.
- * @param chargingAmpHours Charging amp-hrs of the current day, AH. mavi: probably only applies to controller; will be 0 for inverter.
- * @param dischargingAmpHours Discharging amp-hrs of the current day, AH. mavi: probably only applies to inverter; will be 0 for controller.
- * @param powerGeneration Power generation of the current day, WH. Probably only applies to controller.
- * @param powerConsumption Power consumption of the current day, WH. Probably only applies to inverter.
+ * @param chargingAmpHours Charging amp-hrs of the current day, AH. mavi: probably only applies to controller; will be 0 for inverter. Precision: 0 decimal points.
+ * @param dischargingAmpHours Discharging amp-hrs of the current day, AH. mavi: probably only applies to inverter; will be 0 for controller. Precision: 0 decimal points.
+ * @param powerGeneration Power generation of the current day, WH. Probably only applies to controller. Precision: 1 decimal point.
+ * @param powerConsumption Power consumption of the current day, WH. Probably only applies to inverter. Precision: 1 decimal point.
  */
 @Serializable
 data class DailyStats(
@@ -180,15 +180,15 @@ data class DailyStats(
 
 /**
  * @param batterySOC Current battery capacity value (state of charge), 0..100%
- * @param batteryVoltage battery voltage in V
- * @param chargingCurrentToBattery charging current (to battery), A
+ * @param batteryVoltage battery voltage in V. Precision: 1 decimal points.
+ * @param chargingCurrentToBattery charging current (to battery), A. Precision: 2 decimal points.
  * @param batteryTemp battery temperature in °C
  * @param controllerTemp controller temperature in °C
- * @param loadVoltage Street light (load) voltage in V
- * @param loadCurrent Street light (load) current in A
+ * @param loadVoltage Street light (load) voltage in V. Precision: 1 decimal points.
+ * @param loadCurrent Street light (load) current in A. Precision: 2 decimal points.
  * @param loadPower Street light (load) power, in W
- * @param solarPanelVoltage solar panel voltage, in V
- * @param solarPanelCurrent Solar panel current (to controller), in A
+ * @param solarPanelVoltage solar panel voltage, in V. Precision: 1 decimal points.
+ * @param solarPanelCurrent Solar panel current (to controller), in A. Precision: 2 decimal points.
  * @param solarPanelPower charging power, in W
  */
 @Serializable

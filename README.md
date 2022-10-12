@@ -173,15 +173,15 @@ The following columns are available in the `log` database table:
 | ChargingCurrentToBattery           |real| charging current (to battery), A                                                                         |
 | BatteryTemp                        |int| battery temperature in °C                                                                                |
 | ControllerTemp                     |int| controller temperature in °C                                                                             |
-| SolarPanelVoltage                  |real| solar panel voltage, in V                                                                                |
-| SolarPanelCurrent                  |real| Solar panel current (to controller), in A                                                                |
+| SolarPanelVoltage                  |real| solar panel voltage, in V. Precision: 1 decimal points.                                                  |
+| SolarPanelCurrent                  |real| Solar panel current (to controller), in A. Precision: 2 decimal points.                                  |
 | SolarPanelPower                    |int| charging power, in W                                                                                     |
-| Daily_BatteryMinVoltage            |real| Battery's min. voltage of the current day, V                                                             |
-| Daily_BatteryMaxVoltage            |real| Battery's max. voltage of the current day, V                                                             |
-| Daily_MaxChargingCurrent           |real| Max. charging current of the current day, A. Probably applies to controller only.                        |
+| Daily_BatteryMinVoltage            |real| Battery's min. voltage of the current day, V. Precision: 1 decimal points.                               |
+| Daily_BatteryMaxVoltage            |real| Battery's max. voltage of the current day, V. Precision: 1 decimal points.                               |
+| Daily_MaxChargingCurrent           |real| Max. charging current of the current day, A. Probably applies to controller only. Precision: 2 decimal points. |
 | Daily_MaxChargingPower             |int| Max. charging power of the current day, W. Probably applies to controller only.                          |
-| Daily_ChargingAmpHours             |real| Charging amp-hrs of the current day, AH.probably only applies to controller; will be 0 for inverter.     |
-| Daily_PowerGeneration              |real| Power generation of the current day, WH.                                                                 |
+| Daily_ChargingAmpHours             |real| Charging amp-hrs of the current day, AH.probably only applies to controller; will be 0 for inverter. Precision: 0 decimal points. |
+| Daily_PowerGeneration              |real| Power generation of the current day, WH. Precision: 1 decimal point. |
 | Stats_DaysUp                       |int| Total number of operating days                                                                           |
 | Stats_BatteryOverDischargeCount    |int| Total number of battery over-discharges                                                                  |
 | Stats_BatteryFullChargeCount       |int| Total number of battery full-charges.                                                                    |

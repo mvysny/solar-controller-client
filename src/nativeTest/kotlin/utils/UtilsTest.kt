@@ -49,6 +49,8 @@ class UtilsTest {
     fun testGetUShortHiLoAt() {
         var bytes = byteArrayOf(0, 1, 2, 3, 4)
         expect(1.toUShort()) { bytes.getUShortHiLoAt(0) }
+        expect(1f) { bytes.getUShortHiLoAt(0).toFloat() }
+        expect(0.1f) { bytes.getUShortHiLoAt(0).toFloat() / 10 }
         expect(0x0102.toUShort()) { bytes.getUShortHiLoAt(1) }
         bytes = byteArrayOf(0xFF.toByte(), 0xFE.toByte(), 0xFD.toByte())
         expect(0xFFFE.toUShort()) { bytes.getUShortHiLoAt(0) }
