@@ -1,4 +1,5 @@
-import clients.DummyRenogyClient
+package clients
+
 import utils.sleepMillis
 import kotlin.test.Test
 

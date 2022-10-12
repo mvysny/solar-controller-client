@@ -1,4 +1,5 @@
-import clients.*
+package clients
+
 import utils.*
 import kotlin.test.Test
 import kotlin.test.expect
