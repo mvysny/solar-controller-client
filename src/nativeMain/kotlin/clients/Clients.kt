@@ -28,7 +28,7 @@ class OpenCloseClient(val file: File) : RenogyClient {
         withSerialPort { RenogyModbusClient(it).getSystemInfo() }
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData =
-        withSerialPort { RenogyModbusClient(it).getAllData() }
+        withSerialPort { RenogyModbusClient(it).getAllData(cachedSystemInfo) }
 
     override fun close() {}
 
