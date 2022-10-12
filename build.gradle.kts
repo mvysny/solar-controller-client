@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "me.mavi"
-version = "1.0-SNAPSHOT"
+version = "0.2-SNAPSHOT"
 
 defaultTasks("clean", "build")
 
