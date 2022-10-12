@@ -132,12 +132,25 @@ data class File(val pathname: String) {
     init {
         require(pathname.isNotBlank()) { "pathname is blank" }
     }
+
+    /**
+     * Opens the file for appending. Creates the file if it doesn't exist.
+     */
     fun openAppend(mode: Int = rwrwr): IO = IOFile(this, O_WRONLY or O_APPEND or O_CREAT, mode)
+    /**
+     * Opens the file for writing, overwriting any existing content. Creates the file if it doesn't exist.
+     */
     fun openOverwrite(mode: Int = rwrwr): IO = IOFile(this, O_WRONLY or O_TRUNC or O_CREAT, mode)
+
+    /**
+     * Opens the file for reading.
+     */
     fun openRead(): IO = IOFile(this, O_RDONLY)
-    fun appendContents(contents: String) {
-        openAppend().use { file -> file.writeFully(contents.encodeToByteArray()) }
-    }
+
+    /**
+     * Probes whether the file exists or not.
+     * @throws IOException on I/O error
+     */
     fun exists(): Boolean {
         val result = access(pathname, F_OK)
         if (result == 0) return true
@@ -145,6 +158,10 @@ data class File(val pathname: String) {
         iofail("access")
     }
 
+    /**
+     * Returns the file size, in bytes.
+     * @throws IOException on I/O error
+     */
     fun getSize(): ULong = memScoped {
         val st = alloc<stat>()
         if (platform.posix.stat(pathname, st.ptr) < 0) iofail("stat")
