@@ -285,6 +285,19 @@ class SerialPort(file: File) : IOFile(file) {
     }
 }
 
+/**
+ * Drains the pipe so that there are no stray bytes left. Blocks up to 1s (configured in [SerialPort.configure]).
+ */
+fun SerialPort.drainQuietly() {
+    val log = Log.get(SerialPort::class)
+    log.debug("Draining $this")
+    try {
+        drain()
+    } catch (e: Exception) {
+        log.warn("Failed to drain responses", e)
+    }
+}
+
 private val rwrwr = S_IRUSR or S_IWUSR or S_IRGRP or S_IWGRP or S_IROTH
 
 /**

@@ -88,9 +88,6 @@ class DummyRenogyClient : RenogyClient {
         return dummyRenogyData
     }
 
-    override fun drainQuietly() {
-    }
-
     override fun close() {}
 
     /**

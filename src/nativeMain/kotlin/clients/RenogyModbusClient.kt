@@ -4,10 +4,13 @@ package clients
 
 import utils.*
 
+/**
+ * Communicates with Renogy Rover over [io]. Doesn't close [io] on [close].
+ * @param deviceAddress identifies the Renogy Rover if there are multiple Renogy devices on the network.
+ */
 class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyClient {
     init {
         require(deviceAddress in 0..0xf7) { "$deviceAddress: Device address must be 0x01..0xf7, 0x00 is a broadcast address to which all slaves respond but do not return commands" }
-        drainQuietly()
     }
 
     /**
@@ -171,17 +174,9 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
     override fun toString(): String =
         "clients.RenogyModbusClient(io=$io, deviceAddress=$deviceAddress)"
 
-    override fun drainQuietly() {
-        if (io is SerialPort) {
-            log.debug("Draining $io")
-            try {
-                io.drain()
-            } catch (e: Exception) {
-                log.warn("Failed to drain responses", e)
-            }
-        }
-    }
-
+    /**
+     * Does nothing; doesn't even close the [io].
+     */
     override fun close() {}
 
     companion object {
