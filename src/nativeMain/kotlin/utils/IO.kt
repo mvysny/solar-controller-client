@@ -3,6 +3,8 @@ package utils
 import kotlinx.cinterop.*
 import platform.posix.*
 import utils.StdoutIO.close
+import kotlin.random.Random
+import kotlin.random.nextUInt
 
 interface Closeable {
     /**
@@ -146,7 +148,28 @@ data class File(val pathname: String) {
         iofail("access")
     }
 
+    fun getSize(): ULong = memScoped {
+        val st = alloc<stat>()
+        if (platform.posix.stat(pathname, st.ptr) < 0) iofail("stat")
+        return st.st_size.convert()
+    }
+
     override fun toString(): String = "File($pathname)"
+
+    companion object {
+        /**
+         * Creates a new unique file in the /tmp folder.
+         */
+        fun temp(prefix: String = "tmp", suffix: String = "") : File {
+            val tmpFolder = "/tmp"
+            while (true) {
+                val file = File("$tmpFolder/${prefix}_${Random.nextUInt()}${suffix}")
+                if (!file.exists()) {
+                    return file
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -185,6 +208,22 @@ open class FDIO(protected val fd: int32_t) : IO {
     override fun close() {
         checkNativeZero("close") { close(fd) }
     }
+}
+
+/**
+ * Writes [text] to this file, overwriting any previous content.
+ */
+fun File.writeTextUTF8(text: String) {
+    openOverwrite().use { it.write(text) }
+}
+
+/**
+ * Reads the file contents.
+ */
+fun File.readTextUTF8(): String = openRead().use {
+    val buffer = ByteArray(getSize().toInt())
+    it.readFully(buffer)
+    buffer.toKString()
 }
 
 /**

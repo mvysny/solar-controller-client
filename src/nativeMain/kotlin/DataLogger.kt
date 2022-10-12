@@ -210,6 +210,6 @@ class SqliteDataLogger(val file: File, val busyTimeoutMs: Int = 3000) : DataLogg
     override fun toString(): String = "SqliteDataLogger($file)"
 
     companion object {
-        val log = Log.get(SqliteDataLogger::class)
+        private val log = Log.get(SqliteDataLogger::class)
     }
 }
