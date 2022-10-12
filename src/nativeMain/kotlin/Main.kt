@@ -45,7 +45,7 @@ private fun mainLoop(
             log.debug("Getting all data from $client")
             val allData: RenogyData = client.getAllData(systemInfo)
             log.debug("Writing data to ${args.stateFile}")
-            args.stateFile.writeContents(allData.toJson())
+            args.stateFile.writeTextUTF8(allData.toJson())
             dataLoggers.forEach { it.append(allData) }
             midnightAlarm.tick()
             log.debug("Main loop: done")

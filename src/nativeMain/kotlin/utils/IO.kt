@@ -135,9 +135,6 @@ data class File(val pathname: String) {
     fun openAppend(mode: Int = rwrwr): IO = IOFile(this, O_WRONLY or O_APPEND or O_CREAT, mode)
     fun openOverwrite(mode: Int = rwrwr): IO = IOFile(this, O_WRONLY or O_TRUNC or O_CREAT, mode)
     fun openRead(): IO = IOFile(this, O_RDONLY)
-    fun writeContents(contents: String) {
-        openOverwrite().use { file -> file.writeFully(contents.encodeToByteArray()) }
-    }
     fun appendContents(contents: String) {
         openAppend().use { file -> file.writeFully(contents.encodeToByteArray()) }
     }

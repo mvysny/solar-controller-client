@@ -9,15 +9,29 @@ class FileTest {
         expect(true) { File("build.gradle.kts").exists() }
         expect(false) { File("foo").exists() }
     }
+
+    @Test
+    fun testWriteReadFully() {
+        val f = File.temp("text", ".txt")
+        f.writeTextUTF8("Hello, world!")
+        expect("Hello, world!") { f.readTextUTF8() }
+    }
+
+    @Test
+    fun testFileSize() {
+        val f = File.temp("text", ".txt")
+        f.writeTextUTF8("Hello, world!")
+        expect(13) { f.getSize().toInt() }
+    }
 }
 
 class IOTest {
     @Test
     fun testReadFullyInt() {
         val buffer = Buffer(1)
-        buffer.toReturn.addAll(listOf(1, 3, 2, 0x18, 0x1E, 0x32, 0x4c))
+        buffer.toReturn.addAll("010302181e324c")
         val read = buffer.readFully(7)
-        expect(listOf<Byte>(1, 3, 2, 0x18, 0x1E, 0x32, 0x4c)) { read.toList() }
+        expect("010302181e324c") { read.toHex() }
     }
 
     @Test
