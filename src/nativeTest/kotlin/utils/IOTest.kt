@@ -12,14 +12,14 @@ class FileTest {
 
     @Test
     fun testWriteReadFully() {
-        val f = File.temp("text", ".txt")
+        val f = File.temp()
         f.writeTextUTF8("Hello, world!")
         expect("Hello, world!") { f.readTextUTF8() }
     }
 
     @Test
     fun testFileSize() {
-        val f = File.temp("text", ".txt")
+        val f = File.temp()
         f.writeTextUTF8("Hello, world!")
         expect(13) { f.getSize().toInt() }
     }

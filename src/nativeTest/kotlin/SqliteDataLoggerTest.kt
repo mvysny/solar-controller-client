@@ -6,14 +6,14 @@ import kotlin.test.expect
 class SqliteDataLoggerTest {
     @Test
     fun smoke() {
-        val file = File.temp("sqlite", ".db")
+        val file = File.temp()
         SqliteDataLogger(file).init()
         expect(true) { file.exists() } // check that the database file has been created.
     }
 
     @Test
     fun insertOneRecord() {
-        val file = File.temp("sqlite", ".db")
+        val file = File.temp()
         val logger = SqliteDataLogger(file)
         logger.init()
         logger.append(dummyRenogyData)

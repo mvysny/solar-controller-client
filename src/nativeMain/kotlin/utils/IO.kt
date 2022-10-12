@@ -174,14 +174,9 @@ data class File(val pathname: String) {
         /**
          * Creates a new unique file in the /tmp folder.
          */
-        fun temp(prefix: String = "tmp", suffix: String = "") : File {
-            val tmpFolder = "/tmp"
-            while (true) {
-                val file = File("$tmpFolder/${prefix}_${Random.nextUInt()}${suffix}")
-                if (!file.exists()) {
-                    return file
-                }
-            }
+        fun temp() : File {
+            val tmp = tmpnam(null) ?: iofail("tmpnam")
+            return File(tmp.toKString())
         }
     }
 }
