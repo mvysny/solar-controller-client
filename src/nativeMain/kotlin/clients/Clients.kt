@@ -18,6 +18,7 @@ class OpenCloseClient(val file: File) : RenogyClient {
                 block(serialPort)
             } catch (e: RenogyException) {
                 // perhaps there's some leftover data in the serial port? Drain.
+                log.warn("Caught $e, draining $serialPort")
                 serialPort.drainQuietly()
                 throw e
             }
@@ -30,6 +31,10 @@ class OpenCloseClient(val file: File) : RenogyClient {
         withSerialPort { RenogyModbusClient(it).getAllData() }
 
     override fun close() {}
+
+    companion object {
+        private val log = Log.get(OpenCloseClient::class)
+    }
 }
 
 /**
@@ -55,11 +60,13 @@ class KeepOpenClient(val file: File) : RenogyClient {
             return block()
         } catch (e: RenogyException) {
             // perhaps there's some leftover data in the serial port? Drain.
+            log.warn("Caught $e, draining $io")
             io?.drainQuietly()
             throw e
         } catch (t: TimeoutException) {
             // the serial port would simply endlessly fail with TimeoutException.
             // Try to remedy the situation by closing the IO and opening it again on next request.
+            log.warn("Caught $t, closing $io")
             io?.closeQuietly()
             io = null
             throw t
@@ -75,5 +82,9 @@ class KeepOpenClient(val file: File) : RenogyClient {
     override fun close() {
         io?.close()
         io = null
+    }
+
+    companion object {
+        private val log = Log.get(KeepOpenClient::class)
     }
 }
