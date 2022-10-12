@@ -53,3 +53,7 @@ class Buffer(val maxIOBytes: Int = 1024) : IO {
         expect(hexBytes) { writtenBytes.toByteArray().toHex() }
     }
 }
+
+fun MutableList<Byte>.addAll(hex: String) {
+    addAll(hex.fromHex().toList())
+}

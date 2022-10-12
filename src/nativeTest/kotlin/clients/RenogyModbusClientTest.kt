@@ -9,7 +9,7 @@ class RenogyModbusClientTest {
     @Test
     fun readRegister000ANormalResponse() {
         val buffer = Buffer()
-        buffer.toReturn.addAll(listOf(1, 3, 2, 0x18, 0x1E, 0x32, 0x4c))
+        buffer.toReturn.addAll("010302181e324c")
         val client = RenogyModbusClient(buffer)
         val response = client.readRegister(0x0A.toUShort(), 0x02.toUShort())
         buffer.expectWrittenBytes("0103000a0001a408")
@@ -19,7 +19,7 @@ class RenogyModbusClientTest {
     @Test
     fun readRegister000AErrorResponse() {
         val buffer = Buffer()
-        buffer.toReturn.addAll(listOf(1, 0x83.toByte(), 2, 0xc0.toByte(), 0xf1.toByte()))
+        buffer.toReturn.addAll("018302c0f1")
         val client = RenogyModbusClient(buffer)
         try {
             client.readRegister(0x0A.toUShort(), 0x02.toUShort())
@@ -36,7 +36,7 @@ class RenogyModbusClientTest {
     @Test
     fun readRegister000CNormalResponse() {
         val buffer = Buffer()
-        buffer.toReturn.addAll(listOf(1, 3, 0x10, 0x20, 0x20, 0x20, 0x20, 0x4D, 0x54, 0x34, 0x38, 0x33, 0x30, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0xEE.toByte(), 0x98.toByte()))
+        buffer.toReturn.addAll("010310202020204d5434383330202020202020ee98")
         val client = RenogyModbusClient(buffer)
         val response = client.readRegister(0x0C.toUShort(), 16.toUShort())
         buffer.expectWrittenBytes("0103000c0008840f")
@@ -69,7 +69,7 @@ class RenogyModbusClientTest {
         // max discharging power: 0
         // 0608H are the current day's charging amp-hrs (decimal 1544AH);
         // 0810H are the current day's discharging amp-hrs (decimal 2064AH)
-        buffer.toReturn.addAll(listOf(1, 3, 20, 0, 0x70, 0, 0x84.toByte(), 0, 0xd8.toByte(), 0, 0, 0, 10, 0, 0, 6, 8, 8, 0x10, 0, 0x70, 0, 0x84.toByte(), 0xeb.toByte(), 0xde.toByte()))
+        buffer.toReturn.addAll("0103140070008400d80000000a00000608081000700084ebde")
         val client = RenogyModbusClient(buffer)
         val dailyStats = client.getDailyStats()
         buffer.expectWrittenBytes("0103010b000ab5f3")
