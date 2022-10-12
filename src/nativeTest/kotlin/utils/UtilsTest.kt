@@ -15,6 +15,16 @@ class UtilsTest {
         expect("ffff") { 0xffff.toUShort().toHex() }
         expect("ff00") { 0xff00.toUShort().toHex() }
         expect("0f0f") { 0x0f0f.toUShort().toHex() }
+        expect("0103140070008400d80000000a00000608081000700084ebde") {
+            byteArrayOf(1, 3, 20, 0, 0x70, 0, 0x84.toByte(), 0, 0xd8.toByte(), 0, 0, 0, 10, 0, 0, 6, 8, 8, 0x10, 0, 0x70, 0, 0x84.toByte(), 0xeb.toByte(), 0xde.toByte()).toHex()
+        }
+    }
+
+    @Test
+    fun testFromHex() {
+        expect("01031a0070008400d80000000a0000060808") {
+            "01031a0070008400d80000000a0000060808".fromHex().toHex()
+        }
     }
 
     @Test
