@@ -126,11 +126,14 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
         val maxDischargingCurrent: Float = result.getUShortHiLoAt(6).toFloat() / 100
         val maxChargingPower: UShort = result.getUShortHiLoAt(8)
         val maxDischargingPower: UShort = result.getUShortHiLoAt(10)
-        val chargingAmpHours: Float = result.getUShortHiLoAt(12).toFloat()
-        val dischargingAmpHours: Float = result.getUShortHiLoAt(14).toFloat()
-        val powerGeneration: Float = result.getUShortHiLoAt(16).toFloat() / 10
-        val powerConsumption: Float = result.getUShortHiLoAt(18).toFloat() / 10
-        return DailyStats(batteryMinVoltage, batteryMaxVoltage, maxChargingCurrent, maxDischargingCurrent, maxChargingPower, maxDischargingPower, chargingAmpHours, dischargingAmpHours, powerGeneration, powerConsumption)
+        val chargingAmpHours: UShort = result.getUShortHiLoAt(12)
+        val dischargingAmpHours: UShort = result.getUShortHiLoAt(14)
+        // The manual says kWh/10000, however that value does not correspond to chargingAmpHours: chargingAmpHours=2 but this value is 5 for 24V system.
+        // The example in manual says kWh which would simply be too much.
+        // I'll make an educated guess here: it's Wh.
+        val powerGenerationWh: UShort = result.getUShortHiLoAt(16)
+        val powerConsumptionWh: UShort = result.getUShortHiLoAt(18)
+        return DailyStats(batteryMinVoltage, batteryMaxVoltage, maxChargingCurrent, maxDischargingCurrent, maxChargingPower, maxDischargingPower, chargingAmpHours, dischargingAmpHours, powerGenerationWh, powerConsumptionWh)
     }
 
     /**
@@ -144,8 +147,10 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
         val batteryFullChargeCount: UShort = result.getUShortHiLoAt(4)
         val totalChargingBatteryAH: UInt = result.getUIntHiLoAt(6)
         val totalDischargingBatteryAH: UInt = result.getUIntHiLoAt(10)
-        val cumulativePowerGenerationWH: Float = result.getUIntHiLoAt(14).toFloat() / 10
-        val cumulativePowerConsumptionWH: Float = result.getUIntHiLoAt(18).toFloat() / 10
+        // The manual spec says kWh/10000; the manual example says kWh which doesn't make any sense.
+        // I'll make an educated guess here: it's Wh.
+        val cumulativePowerGenerationWH: UInt = result.getUIntHiLoAt(14)
+        val cumulativePowerConsumptionWH: UInt = result.getUIntHiLoAt(18)
         return HistoricalData(daysUp, batteryOverDischargeCount, batteryFullChargeCount, totalChargingBatteryAH, totalDischargingBatteryAH, cumulativePowerGenerationWH, cumulativePowerConsumptionWH)
     }
 

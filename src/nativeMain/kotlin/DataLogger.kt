@@ -66,8 +66,8 @@ private fun IO.csvRenogyWriteData(data: RenogyData, utc: Boolean) {
         data.dailyStats.batteryMaxVoltage,
         data.dailyStats.maxChargingCurrent,
         data.dailyStats.maxChargingPower,
-        data.dailyStats.chargingAmpHours,
-        data.dailyStats.powerGeneration,
+        data.dailyStats.chargingAh,
+        data.dailyStats.powerGenerationWh,
         data.historicalData.daysUp,
         data.historicalData.batteryOverDischargeCount,
         data.historicalData.batteryFullChargeCount,
@@ -147,13 +147,13 @@ class SqliteDataLogger(val file: File, val busyTimeoutMs: Int = 3000) : DataLogg
                     "Daily_BatteryMaxVoltage real not null," +
                     "Daily_MaxChargingCurrent real not null," +
                     "Daily_MaxChargingPower int not null," +
-                    "Daily_ChargingAmpHours real not null," +
-                    "Daily_PowerGeneration real not null," +
+                    "Daily_ChargingAmpHours int not null," +
+                    "Daily_PowerGeneration int not null," +
                     "Stats_DaysUp int not null," +
                     "Stats_BatteryOverDischargeCount int not null," +
                     "Stats_BatteryFullChargeCount int not null," +
                     "Stats_TotalChargingBatteryAH int not null," +
-                    "Stats_CumulativePowerGenerationWH real not null," +
+                    "Stats_CumulativePowerGenerationWH int not null," +
                     "ChargingState int," +
                     "Faults text)")
         }
@@ -188,8 +188,8 @@ class SqliteDataLogger(val file: File, val busyTimeoutMs: Int = 3000) : DataLogg
         add("Daily_BatteryMaxVoltage", data.dailyStats.batteryMaxVoltage)
         add("Daily_MaxChargingCurrent", data.dailyStats.maxChargingCurrent)
         add("Daily_MaxChargingPower", data.dailyStats.maxChargingPower)
-        add("Daily_ChargingAmpHours", data.dailyStats.chargingAmpHours)
-        add("Daily_PowerGeneration", data.dailyStats.powerGeneration)
+        add("Daily_ChargingAmpHours", data.dailyStats.chargingAh)
+        add("Daily_PowerGeneration", data.dailyStats.powerGenerationWh)
         add("Stats_DaysUp", data.historicalData.daysUp)
         add("Stats_BatteryOverDischargeCount", data.historicalData.batteryOverDischargeCount)
         add("Stats_BatteryFullChargeCount", data.historicalData.batteryFullChargeCount)

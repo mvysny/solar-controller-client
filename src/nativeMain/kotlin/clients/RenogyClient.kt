@@ -133,8 +133,8 @@ enum class ControllerFaults(val bit: Int) {
  * @param batteryFullChargeCount Total number of battery full-charges.
  * @param totalChargingBatteryAH Total charging amp-hrs of the battery.
  * @param totalDischargingBatteryAH Total discharging amp-hrs of the battery. mavi: probably only applicable to inverters, 0 for controller.
- * @param cumulativePowerGenerationWH cumulative power generation in WH. Probably only applies to controller, will be 0 for inverter.
- * @param cumulativePowerConsumptionWH cumulative power consumption in WH. mavi: probably only applicable to inverters, 0 for controller.
+ * @param cumulativePowerGenerationWH cumulative power generation in Wh. Probably only applies to controller, will be 0 for inverter.
+ * @param cumulativePowerConsumptionWH cumulative power consumption in Wh. mavi: probably only applicable to inverters, 0 for controller.
  */
 @Serializable
 data class HistoricalData(
@@ -143,8 +143,8 @@ data class HistoricalData(
     val batteryFullChargeCount: UShort,
     val totalChargingBatteryAH: UInt,
     val totalDischargingBatteryAH: UInt,
-    val cumulativePowerGenerationWH: Float,
-    val cumulativePowerConsumptionWH: Float
+    val cumulativePowerGenerationWH: UInt,
+    val cumulativePowerConsumptionWH: UInt
 )
 
 /**
@@ -155,10 +155,10 @@ data class HistoricalData(
  * @param maxDischargingCurrent Max. discharging current of the current day, A. mavi: probably only applies to inverter; will be 0 for controller. Precision: 2 decimal points.
  * @param maxChargingPower Max. charging power of the current day, W. mavi: probably only applies to controller; will be 0 for inverter.
  * @param maxDischargingPower Max. discharging power of the current day, W. mavi: probably only applies to inverter; will be 0 for controller.
- * @param chargingAmpHours Charging amp-hrs of the current day, AH. mavi: probably only applies to controller; will be 0 for inverter. Precision: 0 decimal points.
- * @param dischargingAmpHours Discharging amp-hrs of the current day, AH. mavi: probably only applies to inverter; will be 0 for controller. Precision: 0 decimal points.
- * @param powerGeneration Power generation of the current day, WH. Probably only applies to controller. Precision: 1 decimal point.
- * @param powerConsumption Power consumption of the current day, WH. Probably only applies to inverter. Precision: 1 decimal point.
+ * @param chargingAh Charging amp-hrs of the current day, Ah. mavi: probably only applies to controller; will be 0 for inverter.
+ * @param dischargingAh Discharging amp-hrs of the current day, Ah. mavi: probably only applies to inverter; will be 0 for controller.
+ * @param powerGenerationWh Power generation of the current day, Wh. Probably only applies to controller.
+ * @param powerConsumptionWh Power consumption of the current day, Wh. Probably only applies to inverter.
  */
 @Serializable
 data class DailyStats(
@@ -168,13 +168,13 @@ data class DailyStats(
     val maxDischargingCurrent: Float,
     val maxChargingPower: UShort,
     val maxDischargingPower: UShort,
-    val chargingAmpHours: Float,
-    val dischargingAmpHours: Float,
-    val powerGeneration: Float,
-    val powerConsumption: Float
+    val chargingAh: UShort,
+    val dischargingAh: UShort,
+    val powerGenerationWh: UShort,
+    val powerConsumptionWh: UShort
 ) {
     override fun toString(): String {
-        return "clients.DailyStats(batteryMinVoltage=$batteryMinVoltage V, batteryMaxVoltage=$batteryMaxVoltage V, maxChargingCurrent=$maxChargingCurrent A, maxDischargingCurrent=$maxDischargingCurrent A, maxChargingPower=$maxChargingPower W, maxDischargingPower=$maxDischargingPower W, chargingAmpHours=$chargingAmpHours AH, dischargingAmpHours=$dischargingAmpHours AH, powerGeneration=$powerGeneration WH, powerConsumption=$powerConsumption WH)"
+        return "clients.DailyStats(batteryMinVoltage=$batteryMinVoltage V, batteryMaxVoltage=$batteryMaxVoltage V, maxChargingCurrent=$maxChargingCurrent A, maxDischargingCurrent=$maxDischargingCurrent A, maxChargingPower=$maxChargingPower W, maxDischargingPower=$maxDischargingPower W, chargingAmpHours=$chargingAh AH, dischargingAmpHours=$dischargingAh AH, powerGeneration=$powerGenerationWh WH, powerConsumption=$powerConsumptionWh WH)"
     }
 }
 
