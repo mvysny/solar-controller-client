@@ -32,6 +32,8 @@ class OpenCloseClient(val file: File) : RenogyClient {
 
     override fun close() {}
 
+    override fun toString(): String = "OpenCloseClient($file)"
+
     companion object {
         private val log = Log.get(OpenCloseClient::class)
     }
@@ -83,6 +85,8 @@ class KeepOpenClient(val file: File) : RenogyClient {
         io?.close()
         io = null
     }
+
+    override fun toString(): String = "KeepOpenClient($file)"
 
     companion object {
         private val log = Log.get(KeepOpenClient::class)

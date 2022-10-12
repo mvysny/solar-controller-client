@@ -172,7 +172,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
     )
 
     override fun toString(): String =
-        "clients.RenogyModbusClient(io=$io, deviceAddress=$deviceAddress)"
+        "RenogyModbusClient(io=$io, deviceAddress=$deviceAddress)"
 
     /**
      * Does nothing; doesn't even close the [io].
