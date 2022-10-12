@@ -57,6 +57,26 @@ class RenogyModbusClientTest {
             dummyRenogyData.toJson(false)
         }
     }
+
+    @Test
+    fun testReadDailyStats() {
+        val buffer = Buffer()
+        // The 4th and 5th bytes 0070H indicate the current day's min. battery voltage: 0070H * 0.1 = 112 * 0.1 = 11.2V
+        // The 6th and 7th bytes 0084H indicate the current day's max. battery voltage: 0084H * 0.1 = 132 * 0.1 = 13.2V
+        // The 8th and 9th bytes 00D8H indicate the current day's max. charging current: 00D8H * 0.01 = 216 * 0.01 = 2.16V
+        // then max discharge current: 0
+        // then max charging power: 10
+        // max discharging power: 0
+        // 0608H are the current day's charging amp-hrs (decimal 1544AH);
+        // 0810H are the current day's discharging amp-hrs (decimal 2064AH)
+        buffer.toReturn.addAll(listOf(1, 3, 20, 0, 0x70, 0, 0x84.toByte(), 0, 0xd8.toByte(), 0, 0, 0, 10, 0, 0, 6, 8, 8, 0x10, 0, 0x70, 0, 0x84.toByte(), 0xeb.toByte(), 0xde.toByte()))
+        val client = RenogyModbusClient(buffer)
+        val dailyStats = client.getDailyStats()
+        buffer.expectWrittenBytes("0103010b000ab5f3")
+        expect(
+            DailyStats(11.2f, 13.2f, 2.16f, 0f, 10.toUShort(), 0.toUShort(), 1544f, 2064f, 11.2f, 13.2f)
+        ) { dailyStats }
+    }
 }
 
 val dummySystemInfo = SystemInfo(24, 40, 40, ProductType.Controller, "RENOGY ROVER", "v1.2.3", "v4.5.6", "1501FFFF")

@@ -55,12 +55,12 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
         return data
     }
 
-    private fun verifyCRC(actual: UShort, expected: ByteArray) {
-        require(expected.size == 2) { "${expected.toHex()}: must be of size 2" }
+    private fun verifyCRC(expected: UShort, actual: ByteArray) {
+        require(actual.size == 2) { "${actual.toHex()}: must be of size 2" }
         // for CRC, low byte is sent first, then the high byte.
-        val expectedUShort = expected.getUShortAt(0)
-        if (actual != expectedUShort) {
-            throw RenogyException("Checksum mismatch: expected ${expectedUShort.toHex()} but got ${actual.toHex()}")
+        val actualUShort: UShort = actual.getUShortAt(0)
+        if (actualUShort != expected) {
+            throw RenogyException("Checksum mismatch: expected ${expected.toHex()} but got ${actualUShort.toHex()}")
         }
     }
 
