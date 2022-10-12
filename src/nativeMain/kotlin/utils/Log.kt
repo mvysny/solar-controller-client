@@ -6,6 +6,9 @@ enum class LogLevel {
     DEBUG, INFO, WARN, ERR
 }
 
+/**
+ * Logger. Use one of [debug]/[info]/[warn]/[err] to log stuff, use [get] to obtain the logger instance.
+ */
 interface Log {
     fun debug(msg: String, ex: Throwable? = null) {
         log(LogLevel.DEBUG, msg, ex)
@@ -37,6 +40,7 @@ interface Log {
 }
 
 /**
+ * Logs stuff to stderr.
  * @param tag who's logging. Almost always the class name.
  */
 class StderrLog(val tag: String) : Log {

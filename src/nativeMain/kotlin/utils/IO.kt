@@ -18,8 +18,7 @@ fun Closeable.closeQuietly() {
     try {
         close()
     } catch (e: Exception) {
-        Log.get(this::class).warn("Close failed: $e")
-        e.printStackTrace()
+        Log.get(this::class).warn("Close failed: $e", e)
     }
 }
 
