@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalTime::class)
+package clients
 
 import utils.*
 import kotlin.random.Random
@@ -132,6 +132,6 @@ class DummyRenogyClient() : RenogyClient {
     }
 
     override fun toString(): String {
-        return "DummyRenogyClient(maxSolarPanelVoltage=$maxSolarPanelVoltage, maxSolarPanelAmperage=$maxSolarPanelAmperage)"
+        return "clients.DummyRenogyClient(maxSolarPanelVoltage=$maxSolarPanelVoltage, maxSolarPanelAmperage=$maxSolarPanelAmperage)"
     }
 }

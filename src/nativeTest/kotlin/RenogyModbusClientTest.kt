@@ -1,3 +1,4 @@
+import clients.*
 import utils.*
 import kotlin.test.Test
 import kotlin.test.expect
@@ -21,7 +22,7 @@ class RenogyModbusClientTest {
         val client = RenogyModbusClient(buffer)
         try {
             client.readRegister(0x0A.toUShort(), 0x02.toUShort())
-            fail("Expected to fail with RenogyException")
+            fail("Expected to fail with clients.RenogyException")
         } catch (e: RenogyException) {
             // okay
             expect("0x02: PDU start address is not correct or PDU start address + data length") {
@@ -61,7 +62,8 @@ val dummySystemInfo = SystemInfo(24, 40, 40, ProductType.Controller, "RENOGY ROV
 val dummyPowerStatus = PowerStatus(100.toUShort(), 25.6f, 2.3f, 23, 23, 0f, 0f, 0.toUShort(), 60.2f, 4.2f, (60.2f * 4.2f).toInt().toUShort())
 val dummyDailyStats = DailyStats(25.0f, 28.0f, 10.0f, 10.0f, 240.toUShort(), 240.toUShort(), 100f, 100f, 0f, 0f)
 val dummyHistoricalData = HistoricalData(20.toUShort(), 1.toUShort(), 20.toUShort(), 2000.toUInt(), 2000.toUInt(), 2000f, 2000f)
-val dummyStatus = RenogyStatus(false, 0.toUByte(), ChargingState.MpptChargingMode, setOf(ControllerFaults.ControllerTemperatureTooHigh))
+val dummyStatus = RenogyStatus(false, 0.toUByte(), ChargingState.MpptChargingMode, setOf(
+    ControllerFaults.ControllerTemperatureTooHigh))
 val dummyRenogyData = RenogyData(
     dummySystemInfo,
     dummyPowerStatus,
