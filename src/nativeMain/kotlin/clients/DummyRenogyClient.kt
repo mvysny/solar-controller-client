@@ -2,14 +2,13 @@ package clients
 
 import utils.*
 import kotlin.random.Random
-import kotlin.time.ExperimentalTime
 
 /**
  * Returns random data, emulating stuff returned by an actual Renogy Client
  * @property maxSolarPanelAmperage max rated amperage of the solar panel array
  * @property maxSolarPanelVoltage max rated voltage of the solar panel array
  */
-class DummyRenogyClient() : RenogyClient {
+class DummyRenogyClient : RenogyClient {
     val maxSolarPanelVoltage = 61f
     val maxSolarPanelAmperage = 5f
 
@@ -91,6 +90,8 @@ class DummyRenogyClient() : RenogyClient {
 
     override fun drainQuietly() {
     }
+
+    override fun close() {}
 
     /**
      * Updates statistics. Now we can calculate [DailyStats] and [HistoricalData] correctly.

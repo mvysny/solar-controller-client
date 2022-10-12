@@ -2,9 +2,10 @@ package clients
 
 import clients.RenogyException.Companion.fromCode
 import kotlinx.serialization.Serializable
+import utils.Closeable
 import utils.toHex
 
-interface RenogyClient {
+interface RenogyClient : Closeable {
     /**
      * Retrieves the [SystemInfo] from the device.
      */
