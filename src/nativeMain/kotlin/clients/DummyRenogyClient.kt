@@ -135,7 +135,6 @@ class DummyRenogyClient : RenogyClient {
         lastDailyStatsRetrievedAt = now
     }
 
-    override fun toString(): String {
-        return "clients.DummyRenogyClient(maxSolarPanelVoltage=$maxSolarPanelVoltage, maxSolarPanelAmperage=$maxSolarPanelAmperage)"
-    }
+    override fun toString(): String =
+        "DummyRenogyClient(maxSolarPanelVoltage=$maxSolarPanelVoltage, maxSolarPanelAmperage=$maxSolarPanelAmperage)"
 }

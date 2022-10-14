@@ -11,6 +11,7 @@ import utils.toFile
  * @property utc CSV: dump date in UTC instead of local, handy for Grafana
  * @property csv appends status to a CSV file, disables stdout status logging
  * @property sqlite appends status to a sqlite database, disables stdout status logging
+ * @property postgres appends status to a postgresql database, disables stdout status logging. Accepts the connection url, e.g. `postgresql://user:pass@localhost:5432/postgres`
  * @property stateFile overwrites status to file other than the default 'status.json'
  * @property pollInterval in seconds: how frequently to poll the controller for data, defaults to 10
  * @property pruneLog prunes log entries older than x days, defaults to 365
@@ -22,6 +23,7 @@ data class Args(
     val utc: Boolean,
     val csv: File?,
     val sqlite: File?,
+    val postgres: String?,
     val stateFile: File,
     val pollInterval: Int,
     val pruneLog: Int,
@@ -37,12 +39,16 @@ data class Args(
     fun getDataLoggers(): List<DataLogger> {
         val dataLoggers = mutableListOf<DataLogger>(StdoutCSVDataLogger(utc))
         if (csv != null) {
-            dataLoggers.removeAll { it is StdoutCSVDataLogger }
             dataLoggers.add(CSVDataLogger(csv, utc))
         }
         if (sqlite != null) {
-            dataLoggers.removeAll { it is StdoutCSVDataLogger }
             dataLoggers.add(SqliteDataLogger(sqlite))
+        }
+        if (postgres != null) {
+            dataLoggers.add(PostgresDataLogger(postgres))
+        }
+        if (dataLoggers.size > 1) {
+            dataLoggers.removeAll { it is StdoutCSVDataLogger } // disable the standard stdout logger
         }
         return dataLoggers
     }
@@ -56,6 +62,7 @@ data class Args(
             val utc by parser.option(ArgType.Boolean, fullName = "utc", description = "CSV: dump date in UTC instead of local, handy for Grafana")
             val csv by parser.option(ArgType.String, fullName = "csv", description = "appends status to a CSV file, disables stdout status logging")
             val sqlite by parser.option(ArgType.String, fullName = "sqlite", description = "appends status to a sqlite database, disables stdout status logging")
+            val postgres by parser.option(ArgType.String, fullName = "postgres", description = "appends status to a postgresql database, disables stdout status logging. Accepts the connection url, e.g. postgresql://user:pass@localhost:5432/postgres")
             val statefile by parser.option(ArgType.String, fullName = "statefile", description = "overwrites status to file other than the default 'status.json'")
             val pollingInterval by parser.option(ArgType.Int, fullName = "pollinterval", shortName = "i", description = "in seconds: how frequently to poll the controller for data, defaults to 10")
             val pruneLog by parser.option(ArgType.Int, fullName = "prunelog", description = "prunes log entries older than x days, defaults to 365")
@@ -68,6 +75,7 @@ data class Args(
                 utc == true,
                 csv?.toFile(),
                 sqlite?.toFile(),
+                postgres,
                 (statefile ?: "status.json").toFile(),
                 pollingInterval ?: 10,
                 pruneLog ?: 365,
