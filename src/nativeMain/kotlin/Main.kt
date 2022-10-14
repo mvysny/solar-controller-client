@@ -28,10 +28,10 @@ private fun mainLoop(
     args: Args,
     dataLoggers: List<DataLogger>
 ) {
-    log.info("Accessing device $client")
+    log.info("Accessing solar controller via $client")
     val systemInfo: SystemInfo = client.getSystemInfo()
-    log.info("Device $systemInfo")
-    log.info("Polling the device every ${args.pollInterval} seconds; writing status to ${args.stateFile}, appending data to $dataLoggers")
+    log.info("Solar Controller: $systemInfo")
+    log.info("Polling the solar controller every ${args.pollInterval} seconds; writing status to ${args.stateFile}, appending data to $dataLoggers")
     log.info("Press CTRL+C or send SIGTERM to end the program\n")
 
     dataLoggers.forEach {
