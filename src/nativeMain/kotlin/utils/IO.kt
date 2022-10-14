@@ -3,8 +3,6 @@ package utils
 import kotlinx.cinterop.*
 import platform.posix.*
 import utils.StdoutIO.close
-import kotlin.random.Random
-import kotlin.random.nextUInt
 
 interface Closeable {
     /**
