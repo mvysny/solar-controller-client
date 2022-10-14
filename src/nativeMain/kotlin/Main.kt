@@ -50,7 +50,7 @@ private fun mainLoop(
             midnightAlarm.tick()
             log.debug("Main loop: done")
         } catch (e: Exception) {
-            // don't crash on exception; print it out and continue.
+            // don't crash on exception; print it out and continue. The KeepOpenClient will recover for serialport errors.
             log.warn("Main loop failure", e)
         }
         true
