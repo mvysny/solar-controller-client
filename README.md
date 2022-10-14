@@ -30,12 +30,14 @@ Arguments:
     device -> the file name of the serial device to communicate with, e.g. /dev/ttyUSB0 . Pass in `dummy` for a dummy Renogy client { String }
 Options: 
     --status -> print the Renogy Rover status as JSON to stdout and quit 
-    --utc -> dump date in UTC instead of local, handy for Grafana 
+    --utc -> CSV: dump date in UTC instead of local, handy for Grafana 
     --csv -> appends status to a CSV file, disables stdout status logging { String }
     --sqlite -> appends status to a sqlite database, disables stdout status logging { String }
+    --postgres -> appends status to a postgresql database, disables stdout status logging. Accepts the connection url, e.g. postgresql://user:pass@localhost:5432/postgres { String }
     --statefile -> overwrites status to file other than the default 'status.json' { String }
-    --pollinginterval, -i -> in seconds: how frequently to poll the controller for data, defaults to 10 { Int }
+    --pollinterval, -i -> in seconds: how frequently to poll the controller for data, defaults to 10 { Int }
     --prunelog -> prunes log entries older than x days, defaults to 365 { Int }
+    --verbose -> Print verbosely what I'm doing 
     --help, -h -> Usage info 
 ```
 
