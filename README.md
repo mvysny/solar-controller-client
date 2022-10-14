@@ -209,6 +209,32 @@ Values for the `ChargingState` column:
 Use the [Sqlite Grafana plugin](https://grafana.com/grafana/plugins/frser-sqlite-datasource/)
 to allow Grafana to read the Sqlite database.
 
+## PostgreSQL
+
+PostgreSQL is even better than sqlite: it consumes roughly 30mb of memory and offers blazing-fast
+queries. Use this if you intend to use this tool with Grafana. This requires the `psql`
+program installed. It will be installed along the PostgreSQL database. To install the database quickly
+on your Raspberry PI, run the following:
+
+```bash
+sudo apt install postgresql
+sudo -u postgres psql
+postgres=# create database mydb;
+postgres=# create user myuser with encrypted password 'mypass';
+postgres=# grant all privileges on database mydb to myuser;
+```
+
+Then:
+
+```bash
+$ solar-controller-client.kexe --postgres postgresql://myuser:mypass@localhost:5432/mydb /dev/ttyUSB0
+```
+
+The database columns are identical to the sqlite columns.
+
+The `DateTime` column is an unix timestamp: a number of seconds since the Epoch 00:00:00 UTC on 1 January 1970.
+It's directly compatible with the official [PostgreSQL Grafana plugin](https://grafana.com/docs/grafana/latest/datasources/postgres/).
+
 ## Dummy Renogy Device
 
 Use `dummy` instead
