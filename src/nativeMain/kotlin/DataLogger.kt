@@ -205,6 +205,7 @@ class SqliteDataLogger(val file: File, val busyTimeoutMs: Int = 3000) : DataLogg
         log.info("Deleting old records")
         val deleteOlderThan = getSecondsSinceEpoch() - days.days.inWholeSeconds
         sql("delete from log where DateTime <= $deleteOlderThan")
+        log.info("Successfully deleted old records")
     }
 
     override fun toString(): String = "SqliteDataLogger($file)"
@@ -296,6 +297,7 @@ class PostgresDataLogger(val url: String) : DataLogger {
         log.info("Deleting old records")
         val deleteOlderThan = getSecondsSinceEpoch() - days.days.inWholeSeconds
         sql("delete from log where DateTime <= $deleteOlderThan")
+        log.info("Successfully deleted old records")
     }
 
     override fun toString(): String =
