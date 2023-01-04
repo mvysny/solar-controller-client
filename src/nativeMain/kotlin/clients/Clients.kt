@@ -57,9 +57,9 @@ class KeepOpenClient(val file: File) : RenogyClient {
         return io!!
     }
 
-    private fun <T> runAndMitigateExceptions(block: () -> T) : T {
+    private fun <T> runAndMitigateExceptions(block: (IO) -> T) : T {
         try {
-            return block()
+            return block(getIO())
         } catch (e: RenogyException) {
             // perhaps there's some leftover data in the serial port? Drain.
             log.warn("Caught $e, draining $io")
@@ -76,10 +76,10 @@ class KeepOpenClient(val file: File) : RenogyClient {
     }
 
     override fun getSystemInfo(): SystemInfo =
-        runAndMitigateExceptions { RenogyModbusClient(getIO()).getSystemInfo() }
+        runAndMitigateExceptions { io -> RenogyModbusClient(io).getSystemInfo() }
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData =
-        runAndMitigateExceptions { RenogyModbusClient(getIO()).getAllData(cachedSystemInfo) }
+        runAndMitigateExceptions { io -> RenogyModbusClient(io).getAllData(cachedSystemInfo) }
 
     override fun close() {
         io?.close()
