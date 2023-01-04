@@ -332,11 +332,16 @@ fun String.toZonedDateTime() = ZonedDateTime.parse(this)
 class MidnightAlarm(private val onMidnight: () -> Unit) {
     private var today = LocalDate.today()
 
-    fun tick() {
+    /**
+     * Returns true if we just crossed midnight.
+     */
+    fun tick(): Boolean {
         val today2 = LocalDate.today()
         if (today2 != today) {
             today = today2
             onMidnight()
+            return true
         }
+        return false
     }
 }

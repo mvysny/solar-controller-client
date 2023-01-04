@@ -211,6 +211,11 @@ Values for the `ChargingState` column:
 Use the [Sqlite Grafana plugin](https://grafana.com/grafana/plugins/frser-sqlite-datasource/)
 to allow Grafana to read the Sqlite database.
 
+### The `Daily_` stats
+
+The `Daily_` stats are skewed since Renogy resets the stats at arbitrary time. Currently, for me, the stats are reset at 9:17am.
+This client does its best to 'unskew' the data and adjust the data so that it appears as if being reset correctly at midnight.
+
 ## PostgreSQL
 
 PostgreSQL is even better than sqlite: it consumes roughly 30mb of memory and offers blazing-fast
