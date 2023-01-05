@@ -61,13 +61,13 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
         val prevPowerGenerationWh = this.prevPowerGenerationWh
         if (prevPowerGenerationWh != null && prevPowerGenerationWh > currentDailyStatsFromRenogy.powerGenerationWh) {
             // Renogy finally performed the daily value reset.
-            log.info("Renogy performed the daily value reset, ending the Don't Trust Period")
             inDontTrustPeriod = false
             powerGenerationDuringDontTrustPeriod = (prevPowerGenerationWh - powerGenerationAtMidnight).toUShort().coerceAtLeast(0.toUShort())
             if (crossedMidnight) {
                 // no "Don't Trust Renogy" period -> zero
                 powerGenerationDuringDontTrustPeriod = 0.toUShort()
             }
+            log.info("Renogy performed the daily value reset, ending the 'Don't Trust Renogy' Period (powerGeneration: prev=$prevPowerGenerationWh,now=${currentDailyStatsFromRenogy.powerGenerationWh}); power generated during the period: $powerGenerationDuringDontTrustPeriod")
         }
         this.prevPowerGenerationWh = currentDailyStatsFromRenogy.powerGenerationWh
 
