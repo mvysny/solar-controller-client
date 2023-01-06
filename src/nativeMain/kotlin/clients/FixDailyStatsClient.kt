@@ -13,6 +13,9 @@ import utils.MidnightAlarm
 class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate {
 
     private var dailyStatsCalculator: DailyStatsStrategy = DailyStatsStrategy.RenogyPassThrough(0.toUShort())
+    init {
+        log.info("Starting with daily stats $dailyStatsCalculator")
+    }
 
     /**
      * [DailyStats.powerGenerationWh] from Renogy's previous measurement. If the current measurement is lower,
