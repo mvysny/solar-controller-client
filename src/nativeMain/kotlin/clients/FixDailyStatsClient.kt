@@ -23,15 +23,21 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
      */
     private var prevPowerGenerationWh: UShort? = null
 
-    class MyDailyStats(initialData: RenogyData) {
-        var batteryMinVoltage: Float = initialData.powerStatus.batteryVoltage
+    class MyDailyStats(initialData: PowerStatus) {
+        var batteryMinVoltage: Float = initialData.batteryVoltage
             private set
-        var batteryMaxVoltage: Float = initialData.powerStatus.batteryVoltage
+        var batteryMaxVoltage: Float = initialData.batteryVoltage
+            private set
+        var maxChargingCurrent: Float = initialData.chargingCurrentToBattery
+            private set
+        var maxChargingPower: UShort = initialData.solarPanelPower
             private set
 
-        fun update(data: RenogyData) {
-            batteryMinVoltage = batteryMinVoltage.coerceAtMost(data.powerStatus.batteryVoltage)
-            batteryMaxVoltage = batteryMaxVoltage.coerceAtLeast(data.powerStatus.batteryVoltage)
+        fun update(powerStatus: PowerStatus) {
+            batteryMinVoltage = batteryMinVoltage.coerceAtMost(powerStatus.batteryVoltage)
+            batteryMaxVoltage = batteryMaxVoltage.coerceAtLeast(powerStatus.batteryVoltage)
+            maxChargingCurrent = maxChargingCurrent.coerceAtLeast(powerStatus.chargingCurrentToBattery)
+            maxChargingPower = maxChargingPower.coerceAtLeast(powerStatus.solarPanelPower)
         }
     }
 
@@ -81,16 +87,16 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
 
         // calculate our own dailyBatteryMinVoltage and dailyBatteryMaxVoltage
         if (crossedMidnight || myDailyStats == null) {
-            myDailyStats = MyDailyStats(allData)
+            myDailyStats = MyDailyStats(allData.powerStatus)
         } else {
-            myDailyStats!!.update(allData)
+            myDailyStats!!.update(allData.powerStatus)
         }
 
         val newDailyStats = if (inDontTrustPeriod) currentDailyStatsFromRenogy.copy(
             batteryMinVoltage = myDailyStats!!.batteryMinVoltage,
             batteryMaxVoltage = myDailyStats!!.batteryMaxVoltage,
-            maxChargingCurrent = 0f,
-            maxChargingPower = 0.toUShort(),
+            maxChargingCurrent = myDailyStats!!.maxChargingCurrent,
+            maxChargingPower = myDailyStats!!.maxChargingPower,
             chargingAh = 0.toUShort(),
             powerGenerationWh = (currentDailyStatsFromRenogy.powerGenerationWh - powerGenerationAtMidnight).toUShort()
         ) else currentDailyStatsFromRenogy.copy(
