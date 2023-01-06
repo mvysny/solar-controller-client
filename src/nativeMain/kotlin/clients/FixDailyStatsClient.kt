@@ -23,14 +23,22 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
      */
     private var prevPowerGenerationWh: UShort? = null
 
+    class MyDailyStats(initialData: RenogyData) {
+        var batteryMinVoltage: Float = initialData.powerStatus.batteryVoltage
+            private set
+        var batteryMaxVoltage: Float = initialData.powerStatus.batteryVoltage
+            private set
+
+        fun update(data: RenogyData) {
+            batteryMinVoltage = batteryMinVoltage.coerceAtMost(data.powerStatus.batteryVoltage)
+            batteryMaxVoltage = batteryMaxVoltage.coerceAtLeast(data.powerStatus.batteryVoltage)
+        }
+    }
+
     /**
-     * We'll calculate our own battery stats as well.
+     * Statistics calculated by us. These will be fed during the "Don't Trust Renogy" period.
      */
-    private var dailyBatteryMinVoltage: Float? = null
-    /**
-     * We'll calculate our own battery stats as well.
-     */
-    private var dailyBatteryMaxVoltage: Float? = null
+    private var myDailyStats: MyDailyStats? = null
 
     /**
      * Cumulative power generation at midnight as reported by Renogy. We use this to offset the power generation
@@ -50,8 +58,8 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
     }
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData {
-        val allData = delegate.getAllData()
-        val currentDailyStatsFromRenogy = allData.dailyStats
+        val allData: RenogyData = delegate.getAllData()
+        val currentDailyStatsFromRenogy: DailyStats = allData.dailyStats
 
         val crossedMidnight = midnightAlarm.tick()
         if (crossedMidnight) {
@@ -72,17 +80,15 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
         this.prevPowerGenerationWh = currentDailyStatsFromRenogy.powerGenerationWh
 
         // calculate our own dailyBatteryMinVoltage and dailyBatteryMaxVoltage
-        if (crossedMidnight || dailyBatteryMinVoltage == null || dailyBatteryMaxVoltage == null) {
-            dailyBatteryMinVoltage = allData.powerStatus.batteryVoltage
-            dailyBatteryMaxVoltage = allData.powerStatus.batteryVoltage
+        if (crossedMidnight || myDailyStats == null) {
+            myDailyStats = MyDailyStats(allData)
         } else {
-            dailyBatteryMinVoltage = dailyBatteryMinVoltage!!.coerceAtMost(allData.powerStatus.batteryVoltage)
-            dailyBatteryMaxVoltage = dailyBatteryMaxVoltage!!.coerceAtLeast(allData.powerStatus.batteryVoltage)
+            myDailyStats!!.update(allData)
         }
 
         val newDailyStats = if (inDontTrustPeriod) currentDailyStatsFromRenogy.copy(
-            batteryMinVoltage = dailyBatteryMinVoltage!!,
-            batteryMaxVoltage = dailyBatteryMaxVoltage!!,
+            batteryMinVoltage = myDailyStats!!.batteryMinVoltage,
+            batteryMaxVoltage = myDailyStats!!.batteryMaxVoltage,
             maxChargingCurrent = 0f,
             maxChargingPower = 0.toUShort(),
             chargingAh = 0.toUShort(),
