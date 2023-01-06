@@ -78,9 +78,10 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
          * when outside of the "Don't Trust Renogy" period, to offset for power generation during the [DontTrustRenogyPeriod].
          */
         class RenogyPassThrough(val powerGenerationDuringDontTrustPeriod: UShort) : DailyStatsStrategy() {
-            override fun process(data: RenogyData): DailyStats = data.dailyStats.copy(
-                powerGenerationWh = (data.dailyStats.powerGenerationWh + powerGenerationDuringDontTrustPeriod).toUShort()
-            )
+            override fun process(data: RenogyData): DailyStats = when (powerGenerationDuringDontTrustPeriod) {
+                0.toUShort() -> data.dailyStats
+                else -> data.dailyStats.copy(powerGenerationWh = (data.dailyStats.powerGenerationWh + powerGenerationDuringDontTrustPeriod).toUShort())
+            }
 
             override fun toString(): String =
                 "RenogyPassThrough(powerGenerationDuringDontTrustPeriod=$powerGenerationDuringDontTrustPeriod)"
