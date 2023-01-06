@@ -68,6 +68,9 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
                     powerGenerationWh = (data.dailyStats.powerGenerationWh - powerGenerationAtMidnight).toUShort()
                 )
             }
+
+            override fun toString(): String =
+                "DontTrustRenogyPeriod(powerGenerationAtMidnight=$powerGenerationAtMidnight)"
         }
 
         /**
@@ -78,6 +81,9 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
             override fun process(data: RenogyData): DailyStats = data.dailyStats.copy(
                 powerGenerationWh = (data.dailyStats.powerGenerationWh + powerGenerationDuringDontTrustPeriod).toUShort()
             )
+
+            override fun toString(): String =
+                "RenogyPassThrough(powerGenerationDuringDontTrustPeriod=$powerGenerationDuringDontTrustPeriod)"
         }
     }
 
@@ -91,6 +97,7 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
         val crossedMidnight = midnightAlarm.tick()
         if (crossedMidnight) {
             dailyStatsCalculator = DailyStatsStrategy.DontTrustRenogyPeriod(allData)
+            log.info("Midnight: activating $dailyStatsCalculator")
         }
 
         // detect whether Renogy finally performed the daily value reset.
@@ -108,7 +115,7 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
                     powerGenerationDuringDontTrustPeriod = 0.toUShort()
                 }
                 dailyStatsCalculator = DailyStatsStrategy.RenogyPassThrough(powerGenerationDuringDontTrustPeriod)
-                log.info("Renogy performed the daily value reset, ending the 'Don't Trust Renogy' Period (powerGeneration: prev=$prevPowerGenerationWh,now=${currentDailyStatsFromRenogy.powerGenerationWh}); power generated during the period: $powerGenerationDuringDontTrustPeriod")
+                log.info("Renogy performed the daily value reset, ending the 'Don't Trust Renogy' Period (powerGeneration: prev=$prevPowerGenerationWh,now=${currentDailyStatsFromRenogy.powerGenerationWh}); power generated during the period: $powerGenerationDuringDontTrustPeriod; current=$dailyStatsCalculator")
             } else {
                 // not in "Don't Trust Renogy" period? corner-case - perhaps the client was just launched and hasn't hit midnight yet.
                 log.info("Renogy performed the daily value reset but there was no 'Don't Trust Renogy' Period, passing the daily stats through")
