@@ -98,17 +98,54 @@ enum class ChargingState(val value: UByte) {
 }
 
 enum class ControllerFaults(val bit: Int) {
-    CircuitChargeMOSShort(30),
+    ChargeMOSShortCircuit(30),
     AntiReverseMOSShort(29),
+
+    /**
+     * PV Reverse Polarity. The controller will not operate if the PV wires are switched.
+     * Wire them correctly to resume normal controller operation.
+     */
     SolarPanelReverselyConnected(28),
     SolarPanelWorkingPointOverVoltage(27),
     SolarPanelCounterCurrent(26),
+
+    /**
+     * PV Overvoltage. If the PV voltage is larger than maximum input open voltage 100VDC.
+     * PV will remain disconnected until the voltage drops below 100VDC.
+     */
     PhotovoltaicInputSideOverVoltage(25),
+
+    /**
+     * PV Array Short Circuit. When PV short circuit occurs, the controller will stop
+     * charging. Clear it to resume normal operation.
+     */
     PhotovoltaicInputSideShortCircuit(24),
+
+    /**
+     * PV Overcurrent. The controller will limit the battery chgarging current to the
+     * maximum battery current rating. Therefore, an over-sized solar array will not operate at peak power.
+     */
     PhotovoltaicInputOverpower(23),
     AmbientTemperatureTooHigh(22),
+    /**
+     * Over-Temperature. If the temperature of the controller heat sink exceeds 65 C,
+     * the controller will automatically start reducing the charging current. The controller will
+     * shut down when the temperature exceeds 85 C.
+     */
     ControllerTemperatureTooHigh(21),
+
+    /**
+     * Load Overload. If the current exceeds the maximum load current rating 1.05 times,
+     * the controller will disconnect the load. Overloading must be cleared up by reducing the
+     * load and restarting the controller.
+     */
     LoadOverpowerOrLoadOverCurrent(20),
+
+    /**
+     * Load Short Circuit. Fully protected against the load wiring short-circuit. Once the load
+     * short (more than quadruple rate current), the load short protection will start automatically.
+     * After 5 automatic load reconnect attempts, the faults must be cleared by restarting the controller.
+     */
     LoadShortCircuit(19),
     BatteryUnderVoltageWarning(18),
     BatteryOverVoltage(17),

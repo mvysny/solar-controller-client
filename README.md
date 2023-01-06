@@ -251,6 +251,28 @@ of the device name. This will create a dummy renogy device and poll data off it:
 $ solar-controller-client.kexe dummy
 ```
 
+## Faults
+
+Table of possible faults:
+
+| Fault | Meaning  |
+|-------|----------|
+| ChargeMOSShortCircuit | |
+| AntiReverseMOSShort | |
+| SolarPanelReverselyConnected | PV Reverse Polarity. The controller will not operate if the PV wires are switched. Wire them correctly to resume normal controller operation. |
+| SolarPanelWorkingPointOverVoltage | |
+ | SolarPanelCounterCurrent | |
+| PhotovoltaicInputSideOverVoltage | PV Overvoltage. If the PV voltage is larger than maximum input open voltage 100VDC. PV will remain disconnected until the voltage drops below 100VDC |
+| PhotovoltaicInputSideShortCircuit | PV Array Short Circuit. When PV short circuit occurs, the controller will stop charging. Clear it to resume normal operation. |
+| PhotovoltaicInputOverpower | PV Overcurrent. The controller will limit the battery chgarging current to the maximum battery current rating. Therefore, an over-sized solar array will not operate at peak power. |
+| AmbientTemperatureTooHigh | |
+| ControllerTemperatureTooHigh | Over-Temperature. If the temperature of the controller heat sink exceeds 65 C, the controller will automatically start reducing the charging current. The controller will shut down when the temperature exceeds 85 C. |
+| LoadOverpowerOrLoadOverCurrent | Load Overload. If the current exceeds the maximum load current rating 1.05 times, the controller will disconnect the load. Overloading must be cleared up by reducing the load and restarting the controller. |
+| LoadShortCircuit | Load Short Circuit. Fully protected against the load wiring short-circuit. Once the load short (more than quadruple rate current), the load short protection will start automatically. After 5 automatic load reconnect attempts, the faults must be cleared by restarting the controller. |
+| BatteryUnderVoltageWarning | |
+| BatteryOverVoltage | |
+| BatteryOverDischarge | |
+
 # Compiling From Sources
 
 1. Install Java JDK 11+: `sudo apt install openjdk-11-jdk`. Java is only used to compile the project - it is not necessary to run the app.
