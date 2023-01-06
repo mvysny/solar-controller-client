@@ -4,8 +4,11 @@ import utils.*
 
 /**
  * Keeps a comm pipe open during the whole duration of this client.
- * Workarounds https://github.com/mvysny/solar-controller-client/issues/10 by closing/reopening
+ * Workarounds [Issue 10](https://github.com/mvysny/solar-controller-client/issues/10) by closing/reopening
  * the pipe on timeout.
+ *
+ * The client will then re-throw the exception and will not reattempt to re-read new data. The reason is
+ * that the main loop will call us again anyways.
  */
 class KeepOpenClient(val file: File) : RenogyClient {
     private var io: SerialPort? = null
