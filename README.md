@@ -300,3 +300,8 @@ To compile for Raspberry PI, build on your host machine with:
 * `./gradlew -Parm32` for 32-bit OS
 
 For other target platforms please see [Kotlin/Native Targets](https://kotlinlang.org/docs/multiplatform-dsl-reference.html#targets).
+
+# More documentation
+
+* A [video on how to setup this project with Grafana on RasberryPI running Ubuntu arm64](https://www.youtube.com/watch?v=hXKY9IAxA1Y)
+
