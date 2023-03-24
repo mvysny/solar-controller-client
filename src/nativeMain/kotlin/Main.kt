@@ -8,7 +8,7 @@ fun main(_args: Array<String>) {
 
     val client: RenogyClient = if (args.isDummy) DummyRenogyClient() else FixDailyStatsClient(KeepOpenClient(args.device))
     client.use {
-        if (args.status) {
+        if (args.printStatusOnly) {
             val allData: RenogyData = client.getAllData()
             println(allData.toJson())
         } else {

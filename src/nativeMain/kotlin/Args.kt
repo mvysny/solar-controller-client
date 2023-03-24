@@ -6,20 +6,20 @@ import utils.LogLevel
 import utils.toFile
 
 /**
- * @property device the file name of the serial device to communicate with, e.g. /dev/ttyUSB0 . Pass in `dummy` for a dummy Renogy client
- * @property status print the Renogy Rover status as JSON to stdout and quit
- * @property utc CSV: dump date in UTC instead of local, handy for Grafana
- * @property csv appends status to a CSV file, disables stdout status logging
- * @property sqlite appends status to a sqlite database, disables stdout status logging
- * @property postgres appends status to a postgresql database, disables stdout status logging. Accepts the connection url, e.g. `postgresql://user:pass@localhost:5432/postgres`
+ * @property device the file name of the serial device to communicate with, e.g. `/dev/ttyUSB0`. Pass in `dummy` for a dummy Renogy client
+ * @property printStatusOnly if true, print the Renogy Rover status as JSON to stdout and quit.
+ * @property utc CSV: dump date in UTC instead of local, handy for Grafana.
+ * @property csv if not null, appends status to this CSV file. Disables stdout status logging.
+ * @property sqlite if not null, appends status to a sqlite database. Disables stdout status logging.
+ * @property postgres if not null, appends status to a postgresql database, disables stdout status logging. Accepts the connection url, e.g. `postgresql://user:pass@localhost:5432/postgres`
  * @property stateFile overwrites status to file other than the default 'status.json'
  * @property pollInterval in seconds: how frequently to poll the controller for data, defaults to 10
- * @property pruneLog prunes log entries older than x days, defaults to 365
+ * @property pruneLog Prunes log entries older than x days, defaults to 365. Applies to databases only; a CSV file is never pruned.
  * @property verbose Print verbosely what I'm doing
  */
 data class Args(
     val device: File,
-    val status: Boolean,
+    val printStatusOnly: Boolean,
     val utc: Boolean,
     val csv: File?,
     val sqlite: File?,
@@ -34,6 +34,9 @@ data class Args(
         require(pruneLog > 0) { "pruneLog: must be 1 or greater but was $pruneLog" }
     }
 
+    /**
+     * If 'true' we'll feed the data from a dummy device. Useful for testing.
+     */
     val isDummy: Boolean get() = device.pathname == "dummy"
 
     fun getDataLoggers(): List<DataLogger> {
