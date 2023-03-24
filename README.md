@@ -4,6 +4,8 @@ Kotlin native app which communicate with Renogy Rover 40A over a RS232 serial po
 
 Licensed under the MIT license.
 
+Find the [Dart version here](https://github.com/mvysny/renogy-client).
+
 ## Intended use
 
 Intended to be running on a Raspberry PI. The Raspberry PI needs to be connected over USB/RS232 adapter
