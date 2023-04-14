@@ -5,7 +5,7 @@ import kotlin.time.Duration.Companion.days
 /**
  * Logs [RenogyData] somewhere.
  */
-interface DataLogger {
+interface DataLogger : Closeable {
     /**
      * Initializes the logger; e.g. makes sure the CSV file exists and creates one with a header if it doesn't.
      */
@@ -79,6 +79,39 @@ private fun IO.csvRenogyWriteData(data: RenogyData, utc: Boolean) {
 }
 
 /**
+ * Aggregates multiple [DataLogger]s. Add them to [dataLoggers] before calling [init].
+  */
+class CompositeDataLogger : DataLogger {
+    val dataLoggers = mutableListOf<DataLogger>()
+    override fun init() {
+        dataLoggers.forEach { it.init() }
+    }
+
+    override fun append(data: RenogyData) {
+        dataLoggers.forEach { it.append(data) }
+    }
+
+    override fun deleteRecordsOlderThan(days: Int) {
+        log.info("Deleting old records")
+        dataLoggers.forEach { it.deleteRecordsOlderThan(days) }
+        log.info("Successfully deleted old records")
+    }
+
+    override fun close() {
+        dataLoggers.forEach { it.closeQuietly() }
+        log.debug("Closed $dataLoggers")
+        dataLoggers.clear()
+    }
+
+    override fun toString(): String = "CompositeDataLogger($dataLoggers)"
+
+    companion object {
+        private val log = Log.get(CompositeDataLogger::class)
+    }
+
+}
+
+/**
  * Logs [RenogyData] to a CSV file.
  */
 class CSVDataLogger(val file: File, val utc: Boolean) : DataLogger {
@@ -99,8 +132,10 @@ class CSVDataLogger(val file: File, val utc: Boolean) : DataLogger {
 
     override fun toString(): String = "CSVDataLogger($file, utc=$utc)"
 
+    override fun close() {}
+
     companion object {
-        val log = Log.get(CSVDataLogger::class)
+        private val log = Log.get(CSVDataLogger::class)
     }
 }
 
@@ -122,6 +157,8 @@ class StdoutCSVDataLogger(val utc: Boolean) : DataLogger {
     override fun toString(): String {
         return "StdoutCSVDataLogger(utc=$utc)"
     }
+
+    override fun close() {}
 }
 
 class SqliteDataLogger(val file: File, val busyTimeoutMs: Int = 3000) : DataLogger {
@@ -209,6 +246,8 @@ class SqliteDataLogger(val file: File, val busyTimeoutMs: Int = 3000) : DataLogg
     }
 
     override fun toString(): String = "SqliteDataLogger($file)"
+
+    override fun close() {}
 
     companion object {
         private val log = Log.get(SqliteDataLogger::class)
@@ -299,6 +338,8 @@ class PostgresDataLogger(val url: String) : DataLogger {
         sql("delete from log where DateTime <= $deleteOlderThan")
         log.info("Successfully deleted old records")
     }
+
+    override fun close() {}
 
     override fun toString(): String =
         "PostgresDataLogger($url)"

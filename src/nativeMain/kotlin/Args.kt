@@ -1,9 +1,6 @@
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
-import utils.File
-import utils.Log
-import utils.LogLevel
-import utils.toFile
+import utils.*
 
 /**
  * @property device the file name of the serial device to communicate with, e.g. `/dev/ttyUSB0`. Pass in `dummy` for a dummy Renogy client
@@ -39,21 +36,26 @@ data class Args(
      */
     val isDummy: Boolean get() = device.pathname == "dummy"
 
-    fun getDataLoggers(): List<DataLogger> {
-        val dataLoggers = mutableListOf<DataLogger>(StdoutCSVDataLogger(utc))
-        if (csv != null) {
-            dataLoggers.add(CSVDataLogger(csv, utc))
+    fun newDataLogger(): DataLogger {
+        val result = CompositeDataLogger()
+        try {
+            if (csv != null) {
+                result.dataLoggers.add(CSVDataLogger(csv, utc))
+            }
+            if (sqlite != null) {
+                result.dataLoggers.add(SqliteDataLogger(sqlite))
+            }
+            if (postgres != null) {
+                result.dataLoggers.add(PostgresDataLogger(postgres))
+            }
+            if (result.dataLoggers.isEmpty()) {
+                result.dataLoggers.add(StdoutCSVDataLogger(utc))
+            }
+        } catch (ex: Exception) {
+            result.closeQuietly()
+            throw ex
         }
-        if (sqlite != null) {
-            dataLoggers.add(SqliteDataLogger(sqlite))
-        }
-        if (postgres != null) {
-            dataLoggers.add(PostgresDataLogger(postgres))
-        }
-        if (dataLoggers.size > 1) {
-            dataLoggers.removeAll { it is StdoutCSVDataLogger } // disable the standard stdout logger
-        }
-        return dataLoggers
+        return result
     }
 
     companion object {

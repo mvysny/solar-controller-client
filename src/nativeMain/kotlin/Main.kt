@@ -4,15 +4,15 @@ import utils.*
 fun main(_args: Array<String>) {
     val args = Args.parse(_args)
 
-    val dataLoggers = args.getDataLoggers()
-
-    val client: RenogyClient = if (args.isDummy) DummyRenogyClient() else FixDailyStatsClient(KeepOpenClient(args.device))
-    client.use {
-        if (args.printStatusOnly) {
-            val allData: RenogyData = client.getAllData()
-            println(allData.toJson())
-        } else {
-            mainLoop(client, args, dataLoggers)
+    args.newDataLogger().use { dataLogger ->
+        val client: RenogyClient = if (args.isDummy) DummyRenogyClient() else FixDailyStatsClient(KeepOpenClient(args.device))
+        client.use {
+            if (args.printStatusOnly) {
+                val allData: RenogyData = client.getAllData()
+                println(allData.toJson())
+            } else {
+                mainLoop(client, args, dataLogger)
+            }
         }
     }
 }
@@ -21,32 +21,30 @@ private val log = Log.get("Main")
 
 /**
  * Runs the main loop: periodically polls [client] for new Solar Controller data,
- * then logs the data to all [dataLoggers].
+ * then logs the data to the [dataLogger].
  */
 private fun mainLoop(
     client: RenogyClient,
     args: Args,
-    dataLoggers: List<DataLogger>
+    dataLogger: DataLogger
 ) {
     log.info("Accessing solar controller via $client")
     val systemInfo: SystemInfo = client.getSystemInfo()
     log.info("Solar Controller: $systemInfo")
-    log.info("Polling the solar controller every ${args.pollInterval} seconds; writing status to ${args.stateFile}, appending data to $dataLoggers")
+    log.info("Polling the solar controller every ${args.pollInterval} seconds; writing status to ${args.stateFile}, appending data to $dataLogger")
     log.info("Press CTRL+C or send SIGTERM to end the program\n")
 
-    dataLoggers.forEach {
-        it.init()
-        it.deleteRecordsOlderThan(args.pruneLog)
-    }
+    dataLogger.init()
+    dataLogger.deleteRecordsOlderThan(args.pruneLog)
 
-    val midnightAlarm = MidnightAlarm { dataLoggers.forEach { it.deleteRecordsOlderThan(args.pruneLog) } }
+    val midnightAlarm = MidnightAlarm { dataLogger.deleteRecordsOlderThan(args.pruneLog) }
     repeatEvery(args.pollInterval * 1000L) {
         try {
             log.debug("Getting all data from $client")
             val allData: RenogyData = client.getAllData(systemInfo)
             log.debug("Writing data to ${args.stateFile}")
             args.stateFile.writeTextUTF8(allData.toJson())
-            dataLoggers.forEach { it.append(allData) }
+            dataLogger.append(allData)
             midnightAlarm.tick()
             log.debug("Main loop: done")
         } catch (e: Exception) {
