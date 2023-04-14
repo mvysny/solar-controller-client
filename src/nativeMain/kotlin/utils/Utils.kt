@@ -69,10 +69,7 @@ fun ByteArray.toHex(): String = joinToString(separator = "") { it.toHex() }
 /**
  * Formats this byte as a 2-character hex value, e.g. "03" or "fe".
  */
-fun Byte.toHex(): String {
-    val hex = toUByte().toInt().toString(16)
-    return if (hex.length == 1) "0${hex}" else hex
-}
+fun Byte.toHex(): String = toUByte().toInt().toString(16).padStart(2, '0')
 
 /**
  * Converts a string such as "03fe" from hex to byte array.

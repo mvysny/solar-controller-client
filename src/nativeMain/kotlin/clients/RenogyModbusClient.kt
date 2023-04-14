@@ -14,14 +14,21 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
     }
 
     /**
-     * Performs the ReadRegister call and returns the data returned. Internal, don't use.
+     * Performs the ReadRegister call and returns the data returned.
+     *
+     * Internal, don't use. Visible for testing only.
      */
-    fun readRegister(startAddress: UShort, noOfReadBytes: UShort): ByteArray {
-        val noOfReadWords = (noOfReadBytes / 2.toUShort()).toUShort()
-        require(noOfReadWords in 0x1.toUShort()..0x7D.toUShort()) { "$noOfReadWords: must be 0x0001..0x007D" }
+    fun readRegister(startAddress: Int, noOfReadBytes: Int): ByteArray {
+        require(startAddress in 0..0x1000) { "$startAddress: must be 0..0x1000" }
+        val noOfReadWords: Int = noOfReadBytes / 2
+        require(noOfReadWords in 0x1..0x7D) { "$noOfReadWords: must be 0x0001..0x007D" }
 
         // prepare request
-        val request = byteArrayOf(deviceAddress, COMMAND_READ_REGISTER, startAddress.hibyte, startAddress.lobyte, noOfReadWords.hibyte, noOfReadWords.lobyte, 0, 0)
+        val request = ByteArray(8)
+        request[0] = deviceAddress
+        request[1] = COMMAND_READ_REGISTER
+        request.setUShortHiLoAt(2, startAddress.toUShort())
+        request.setUShortHiLoAt(4, noOfReadWords.toUShort())
         val crc = CRC16Modbus()
         crc.update(request, 0, 6)
         request.setUShortAt(6, crc.crc) // for CRC, low byte is sent first, then the high byte.
@@ -30,7 +37,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
         // read response
         val responseHeader = io.readFully(3)
         if (responseHeader[0] != deviceAddress) {
-            throw RenogyException("${startAddress.toHex()}: Invalid response: expected deviceAddress $deviceAddress but got ${responseHeader[0]}")
+            throw RenogyException("${startAddress.toString(16)}: Invalid response: expected deviceAddress $deviceAddress but got ${responseHeader[0]}")
         }
         if (responseHeader[1] == 0x83.toByte()) {
             // error response. First verify checksum.
@@ -38,16 +45,16 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
             throw RenogyException.fromCode(responseHeader[2])
         }
         if (responseHeader[1] != 0x03.toByte()) {
-            throw RenogyException("${startAddress.toHex()}: Unexpected response code: expected 3 but got ${responseHeader[1]}")
+            throw RenogyException("${startAddress.toString(16)}: Unexpected response code: expected 3 but got ${responseHeader[1]}")
         }
         // normal response. Read the data.
-        val dataLength = responseHeader[2].toUByte()
-        require(dataLength.toUShort() == noOfReadBytes) { "${startAddress.toHex()}: the call was expected to return $noOfReadBytes bytes but got $dataLength" }
+        val dataLength = responseHeader[2].toInt()
+        require(dataLength == noOfReadBytes) { "${startAddress.toString(16)}: the call was expected to return $noOfReadBytes bytes but got $dataLength" }
 
-        if (dataLength !in 1.toUByte()..0xFA.toUByte()) {
-            throw RenogyException("${startAddress.toHex()}: dataLength must be 0x01..0xFA but was $dataLength")
+        if (dataLength !in 1..0xFA) {
+            throw RenogyException("${startAddress.toString(16)}: dataLength must be 0x01..0xFA but was $dataLength")
         }
-        val data = io.readFully(dataLength.toInt())
+        val data = io.readFully(dataLength)
         // verify the CRC
         verifyCRC(crcOf(responseHeader, data), io.readFully(2))
 
@@ -69,23 +76,23 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
      */
     override fun getSystemInfo(): SystemInfo {
         log.debug("getting system info")
-        var result = readRegister(0x0A.toUShort(), 4.toUShort())
+        var result = readRegister(0x0A, 4)
         val maxVoltage = result[0].toInt()
         val ratedChargingCurrent = result[1].toInt()
         val ratedDischargingCurrent = result[2].toInt()
         val productTypeNum = result[3]
         val productType = ProductType.values().firstOrNull { it.modbusValue == productTypeNum }
 
-        result = readRegister(0x0C.toUShort(), 16.toUShort())
+        result = readRegister(0x0C, 16)
         val productModel = result.toAsciiString().trim()
 
         // software version/hardware version
-        result = readRegister(0x0014.toUShort(), 8.toUShort())
+        result = readRegister(0x0014, 8)
         val softvareVersion = "V${result[1]}.${result[2]}.${result[3]}"
         val hardwareVersion = "V${result[5]}.${result[6]}.${result[7]}"
 
         // serial number
-        result = readRegister(0x0018.toUShort(), 4.toUShort())
+        result = readRegister(0x0018, 4)
         val serialNumber = result.toHex()
 
         return SystemInfo(maxVoltage,ratedChargingCurrent, ratedDischargingCurrent, productType, productModel, softvareVersion, hardwareVersion, serialNumber)
@@ -97,7 +104,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
      */
     fun getPowerStatus(): PowerStatus {
         log.debug("getting power status")
-        val result = readRegister(0x0100.toUShort(), 20.toUShort())
+        val result = readRegister(0x0100, 20)
         val batterySOC = result.getUShortHiLoAt(0)
         val batteryVoltage = result.getUShortHiLoAt(2).toFloat() / 10
         // @todo in modbus spec examples, there's no chargingCurrentToBattery, and
@@ -119,7 +126,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
      */
     fun getDailyStats(): DailyStats {
         log.debug("getting daily stats")
-        val result = readRegister(0x010B.toUShort(), 20.toUShort())
+        val result = readRegister(0x010B, 20)
         val batteryMinVoltage: Float = result.getUShortHiLoAt(0).toFloat() / 10
         val batteryMaxVoltage: Float = result.getUShortHiLoAt(2).toFloat() / 10
         val maxChargingCurrent: Float = result.getUShortHiLoAt(4).toFloat() / 100
@@ -141,7 +148,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
      */
     fun getHistoricalData(): HistoricalData {
         log.debug("getting historical data")
-        val result = readRegister(0x0115.toUShort(), 22.toUShort())
+        val result = readRegister(0x0115, 22)
         val daysUp: UShort = result.getUShortHiLoAt(0)
         val batteryOverDischargeCount: UShort = result.getUShortHiLoAt(2)
         val batteryFullChargeCount: UShort = result.getUShortHiLoAt(4)
@@ -159,7 +166,7 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
      */
     fun getStatus(): RenogyStatus {
         log.debug("getting status")
-        val result = readRegister(0x120.toUShort(), 6.toUShort())
+        val result = readRegister(0x120, 6)
         val streetLightOn = (result[0].toUByte() and 0x80.toUByte()) != 0.toUByte()
         val streetLightBrightness = result[0].toUByte() and 0x7F.toUByte()
         val chargingState = ChargingState.fromModbus(result[1].toUByte())

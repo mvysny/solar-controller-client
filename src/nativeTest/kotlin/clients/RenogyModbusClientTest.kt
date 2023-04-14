@@ -11,7 +11,7 @@ class RenogyModbusClientTest {
         val buffer = Buffer()
         buffer.toReturn.addAll("010302181e324c")
         val client = RenogyModbusClient(buffer)
-        val response = client.readRegister(0x0A.toUShort(), 0x02.toUShort())
+        val response = client.readRegister(0x0A, 0x02)
         buffer.expectWrittenBytes("0103000a0001a408")
         expect("181e") { response.toHex() }
     }
@@ -22,7 +22,7 @@ class RenogyModbusClientTest {
         buffer.toReturn.addAll("018302c0f1")
         val client = RenogyModbusClient(buffer)
         try {
-            client.readRegister(0x0A.toUShort(), 0x02.toUShort())
+            client.readRegister(0x0A, 0x02)
             fail("Expected to fail with clients.RenogyException")
         } catch (e: RenogyException) {
             // okay
@@ -38,7 +38,7 @@ class RenogyModbusClientTest {
         val buffer = Buffer()
         buffer.toReturn.addAll("010310202020204d5434383330202020202020ee98")
         val client = RenogyModbusClient(buffer)
-        val response = client.readRegister(0x0C.toUShort(), 16.toUShort())
+        val response = client.readRegister(0x0C, 16)
         buffer.expectWrittenBytes("0103000c0008840f")
         expect("202020204d5434383330202020202020") { response.toHex() }
     }

@@ -68,6 +68,13 @@ class UtilsTest {
     }
 
     @Test
+    fun testSetUShortHiLoAt() {
+        val bytes = byteArrayOf(0, 1, 2, 3, 4)
+        bytes.setUShortHiLoAt(0, 0xdead.toUShort())
+        expect("dead020304") { bytes.toHex() }
+    }
+
+    @Test
     fun testGetUIntHiLoAt() {
         var bytes = byteArrayOf(0, 1, 2, 3, 4)
         expect(0x00010203.toUInt()) { bytes.getUIntHiLoAt(0) }
