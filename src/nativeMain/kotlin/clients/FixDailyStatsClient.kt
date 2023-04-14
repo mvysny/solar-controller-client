@@ -23,74 +23,6 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
      */
     private var prevPowerGenerationWh: UShort? = null
 
-    private sealed class DailyStatsStrategy {
-        abstract fun process(data: RenogyData): DailyStats
-
-        /**
-         * The time from midnight until 9:17am (or any other arbitrary point in time until Renogy finally resets the data)
-         * is called the "Don't Trust Renogy" period. In this period, we don't trust Renogy - instead, we calculate the daily stats ourselves.
-         */
-        class DontTrustRenogyPeriod(midnightData: RenogyData) : DailyStatsStrategy() {
-            /**
-             * Cumulative power generation at midnight as reported by Renogy. We use this to offset the power generation
-             * during the "Don't Trust Renogy" period.
-             */
-            val powerGenerationAtMidnight: UShort = midnightData.dailyStats.powerGenerationWh
-
-            private class MyDailyStats(initialData: PowerStatus) {
-                var batteryMinVoltage: Float = initialData.batteryVoltage
-                    private set
-                var batteryMaxVoltage: Float = initialData.batteryVoltage
-                    private set
-                var maxChargingCurrent: Float = initialData.chargingCurrentToBattery
-                    private set
-                var maxChargingPower: UShort = initialData.solarPanelPower
-                    private set
-
-                fun update(powerStatus: PowerStatus) {
-                    batteryMinVoltage = batteryMinVoltage.coerceAtMost(powerStatus.batteryVoltage)
-                    batteryMaxVoltage = batteryMaxVoltage.coerceAtLeast(powerStatus.batteryVoltage)
-                    maxChargingCurrent = maxChargingCurrent.coerceAtLeast(powerStatus.chargingCurrentToBattery)
-                    maxChargingPower = maxChargingPower.coerceAtLeast(powerStatus.solarPanelPower)
-                }
-            }
-
-            /**
-             * Statistics calculated by us.
-             */
-            private val myDailyStats: MyDailyStats = MyDailyStats(midnightData.powerStatus)
-
-            override fun process(data: RenogyData): DailyStats {
-                myDailyStats.update(data.powerStatus)
-                return data.dailyStats.copy(
-                    batteryMinVoltage = myDailyStats.batteryMinVoltage,
-                    batteryMaxVoltage = myDailyStats.batteryMaxVoltage,
-                    maxChargingCurrent = myDailyStats.maxChargingCurrent,
-                    maxChargingPower = myDailyStats.maxChargingPower,
-                    chargingAh = 0.toUShort(),
-                    powerGenerationWh = (data.dailyStats.powerGenerationWh - powerGenerationAtMidnight).toUShort()
-                )
-            }
-
-            override fun toString(): String =
-                "DontTrustRenogyPeriod(powerGenerationAtMidnight=$powerGenerationAtMidnight)"
-        }
-
-        /**
-         * @property powerGenerationDuringDontTrustPeriod Cumulative power generation during the [DontTrustRenogyPeriod] period. We'll add this value to [DailyStats.powerGenerationWh]
-         * when outside of the "Don't Trust Renogy" period, to offset for power generation during the [DontTrustRenogyPeriod].
-         */
-        class RenogyPassThrough(val powerGenerationDuringDontTrustPeriod: UShort) : DailyStatsStrategy() {
-            override fun process(data: RenogyData): DailyStats = when (powerGenerationDuringDontTrustPeriod) {
-                0.toUShort() -> data.dailyStats
-                else -> data.dailyStats.copy(powerGenerationWh = (data.dailyStats.powerGenerationWh + powerGenerationDuringDontTrustPeriod).toUShort())
-            }
-
-            override fun toString(): String =
-                "RenogyPassThrough(powerGenerationDuringDontTrustPeriod=$powerGenerationDuringDontTrustPeriod)"
-        }
-    }
-
     private val midnightAlarm = MidnightAlarm {}
 
     override fun getAllData(cachedSystemInfo: SystemInfo?): RenogyData {
@@ -136,5 +68,73 @@ class FixDailyStatsClient(val delegate: RenogyClient) : RenogyClient by delegate
 
     companion object {
         private val log = Log.get(FixDailyStatsClient::class)
+    }
+}
+
+private sealed class DailyStatsStrategy {
+    abstract fun process(data: RenogyData): DailyStats
+
+    /**
+     * The time from midnight until 9:17am (or any other arbitrary point in time until Renogy finally resets the data)
+     * is called the "Don't Trust Renogy" period. In this period, we don't trust Renogy - instead, we calculate the daily stats ourselves.
+     */
+    class DontTrustRenogyPeriod(midnightData: RenogyData) : DailyStatsStrategy() {
+        /**
+         * Cumulative power generation at midnight as reported by Renogy. We use this to offset the power generation
+         * during the "Don't Trust Renogy" period.
+         */
+        val powerGenerationAtMidnight: UShort = midnightData.dailyStats.powerGenerationWh
+
+        private class MyDailyStats(initialData: PowerStatus) {
+            var batteryMinVoltage: Float = initialData.batteryVoltage
+                private set
+            var batteryMaxVoltage: Float = initialData.batteryVoltage
+                private set
+            var maxChargingCurrent: Float = initialData.chargingCurrentToBattery
+                private set
+            var maxChargingPower: UShort = initialData.solarPanelPower
+                private set
+
+            fun update(powerStatus: PowerStatus) {
+                batteryMinVoltage = batteryMinVoltage.coerceAtMost(powerStatus.batteryVoltage)
+                batteryMaxVoltage = batteryMaxVoltage.coerceAtLeast(powerStatus.batteryVoltage)
+                maxChargingCurrent = maxChargingCurrent.coerceAtLeast(powerStatus.chargingCurrentToBattery)
+                maxChargingPower = maxChargingPower.coerceAtLeast(powerStatus.solarPanelPower)
+            }
+        }
+
+        /**
+         * Statistics calculated by us.
+         */
+        private val myDailyStats: MyDailyStats = MyDailyStats(midnightData.powerStatus)
+
+        override fun process(data: RenogyData): DailyStats {
+            myDailyStats.update(data.powerStatus)
+            return data.dailyStats.copy(
+                batteryMinVoltage = myDailyStats.batteryMinVoltage,
+                batteryMaxVoltage = myDailyStats.batteryMaxVoltage,
+                maxChargingCurrent = myDailyStats.maxChargingCurrent,
+                maxChargingPower = myDailyStats.maxChargingPower,
+                chargingAh = 0.toUShort(),
+                powerGenerationWh = (data.dailyStats.powerGenerationWh - powerGenerationAtMidnight).toUShort()
+            )
+        }
+
+        override fun toString(): String =
+            "DontTrustRenogyPeriod(powerGenerationAtMidnight=$powerGenerationAtMidnight)"
+    }
+
+    /**
+     * @property powerGenerationDuringDontTrustPeriod Cumulative power generation during the [DontTrustRenogyPeriod] period. We'll add this value to [DailyStats.powerGenerationWh]
+     * when outside of the "Don't Trust Renogy" period, to offset for power generation during the [DontTrustRenogyPeriod].
+     */
+    class RenogyPassThrough(val powerGenerationDuringDontTrustPeriod: UShort) : DailyStatsStrategy() {
+        override fun process(data: RenogyData): DailyStats = when (powerGenerationDuringDontTrustPeriod) {
+            0.toUShort() -> data.dailyStats
+            else -> data.dailyStats.copy(powerGenerationWh = (data.dailyStats.powerGenerationWh + powerGenerationDuringDontTrustPeriod).toUShort())
+        }
+
+        override fun toString(): String =
+            "RenogyPassThrough(powerGenerationDuringDontTrustPeriod=$powerGenerationDuringDontTrustPeriod)"
     }
 }
