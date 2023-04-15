@@ -8,11 +8,18 @@ import utils.*
  * the pipe on timeout.
  *
  * The client will then re-throw the exception and will not reattempt to re-read new data. The reason is
- * that the main loop will call us again anyways.
+ * that the main loop will call us again anyway.
+ * @property file The serial device name, e.g. `/dev/ttyUSB0`. [SerialPort] is constructed out of it.
  */
-class KeepOpenClient(val file: File) : RenogyClient {
+class RetryOnTimeoutClient(val file: File) : RenogyClient {
+    /**
+     * Currently used [IO]. Closed on timeout.
+     */
     private var io: SerialPort? = null
 
+    /**
+     * Gets the current [IO], opening a new [SerialPort] if there's no current one.
+     */
     private fun getIO(): SerialPort {
         if (io == null) {
             io = SerialPort(file).apply {
@@ -52,9 +59,9 @@ class KeepOpenClient(val file: File) : RenogyClient {
         io = null
     }
 
-    override fun toString(): String = "KeepOpenClient($file)"
+    override fun toString(): String = "RetryOnTimeoutClient($file)"
 
     companion object {
-        private val log = Log.get(KeepOpenClient::class)
+        private val log = Log.get(RetryOnTimeoutClient::class)
     }
 }

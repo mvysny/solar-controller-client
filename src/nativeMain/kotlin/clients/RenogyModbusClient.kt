@@ -193,6 +193,6 @@ class RenogyModbusClient(val io: IO, val deviceAddress: Byte = 0x01) : RenogyCli
 
     companion object {
         private val COMMAND_READ_REGISTER: Byte = 0x03
-        val log = Log.get(RenogyModbusClient::class)
+        private val log = Log.get(RenogyModbusClient::class)
     }
 }

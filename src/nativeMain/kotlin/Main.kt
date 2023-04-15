@@ -5,7 +5,7 @@ fun main(_args: Array<String>) {
     val args = Args.parse(_args)
 
     args.newDataLogger().use { dataLogger ->
-        val client: RenogyClient = if (args.isDummy) DummyRenogyClient() else FixDailyStatsClient(KeepOpenClient(args.device))
+        val client: RenogyClient = if (args.isDummy) DummyRenogyClient() else FixDailyStatsClient(RetryOnTimeoutClient(args.device))
         client.use {
             if (args.printStatusOnly) {
                 val allData: RenogyData = client.getAllData()
