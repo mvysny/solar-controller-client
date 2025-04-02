@@ -1,6 +1,6 @@
 # Solar Controller Client
 
-> DEPRECATED, no longer maintained. Superseded by the [Renogy Klient](https://github.com/mvysny/renogy-klient).
+**DEPRECATED**, no longer maintained. Superseded by the [Renogy Klient](https://github.com/mvysny/renogy-klient).
 
 Kotlin native app which communicate with Renogy Rover 40A over a RS232 serial port, using the Rover Modbus protocol.
 
